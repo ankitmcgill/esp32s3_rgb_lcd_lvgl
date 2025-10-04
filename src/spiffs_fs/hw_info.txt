@@ -2,9 +2,15 @@
 HW INFO
 OCTOBER 3, 2025
 -----------------------------------------------
-BOARD : ESP32-S3-Touch-LCD-4.3 (NON TOUCH)
+BOARD : ESP32-S3-Touch-LCD-4.3
 
 MCU : ESP32-S3 WROOM
 FLASH : 16 MB
 PSRAM : 8MB
+DISPLAY PARAMS:
+    SIZE - 800 x 480
+    COLOR - RGB565
+    DISPLAY CONTROLLER - ST7262
+    TOUCH CONTROLLER - N/A
+    LINK : www.waveshare.com/wiki/ESP32-S3-Touch-LCD-4.3
 -----------------------------------------------
