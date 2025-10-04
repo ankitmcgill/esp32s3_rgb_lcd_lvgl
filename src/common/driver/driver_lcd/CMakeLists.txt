@@ -5,9 +5,9 @@ idf_component_register(SRCS
                        PRIV_REQUIRES
                             esp_lcd
                             espressif__esp_lvgl_port
+                            lvgl__lvgl
                             esp_common
                             defines
                             bsp
-                            project_ui
                        REQUIRES
 )

@@ -1,14 +1,18 @@
 // DRIVER_LCD
 // SEPTEMBER 30, 2025
 
+#include "esp_err.h"
+#include "esp_log.h"
+#include "esp_check.h"
+#include "esp_idf_version.h"
+#include "driver/i2c_master.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_rgb.h"
 #include "esp_lvgl_port.h"
-#include "esp_check.h"
+#include "lv_demos.h"
 
 #include "driver_lcd.h"
-#include "project_ui.h"
 #include "define_common_data_types.h"
 #include "define_rtos_globals.h"
 #include "define_rtos_tasks.h"
@@ -18,14 +22,15 @@
 
 // Local Variables
 static rtos_component_type_t s_component_type;
-static esp_lcd_panel_handle_t s_handle_panel;
-static lv_display_t* s_lv_display;
+// static lv_display_t* s_lvgl_display;
+static esp_lcd_panel_handle_t s_handle_lcd_panel;
+static lv_display_t* s_display;
+// static lv_display_t* s_lv_display;
 
 // Local Functions
-static esp_err_t s_rgb_lcd_init(void);
-static esp_err_t s_lvgl_port_init(void);
-static esp_err_t s_lvgl_config(void);
-static void s_lvgl_test_display(void);
+static bool s_lcd_panel_and_rgb_init(void);
+static bool s_lvgl_port_init(void);
+static bool s_add_lcd_screen(void);
 
 // External Functions
 bool DRIVER_LCD_Init(void)
@@ -36,34 +41,41 @@ bool DRIVER_LCD_Init(void)
 
     ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Type %u. Init", s_component_type);
 
-    s_rgb_lcd_init();
-    s_lvgl_port_init();
-    s_lvgl_config();
+    // Initialize Display Subsystems
+    if(!s_lcd_panel_and_rgb_init()) goto err;
+    if(!s_lvgl_port_init()) goto err;
+    if(!s_add_lcd_screen()) goto err;
 
-    if (lvgl_port_lock(portMAX_DELAY)) {
-        // s_lvgl_test_display();
-        PROJECT_UI_Init();
-        lvgl_port_unlock();
-    }
-    
     return true;
+    err:
+        return false;
 }
 
-static esp_err_t s_rgb_lcd_init(void)
+void DRIVER_LCD_Demo(void)
 {
-    // Initial ESP RGB LCD
+    // Lvgl Demo
+    // For This To Work The Following Should Be Enabed Through Menuconfig
+    // 1. Component Config -> LVGL Configuration -> Demos -> Build Demos
+    // 1. Component Config -> LVGL Configuration -> Demos -> Benchmark Your System
+    // 1. Component Config -> LVGL Configuration -> Others -> Enable System Monitor Component
+    // 1. Component Config -> LVGL Configuration -> Others -> Show CPU Usage And Fps Count
 
+    #if defined CONFIG_LV_BUILD_DEMOS && defined CONFIG_LV_USE_SYSMON && defined CONFIG_LV_USE_PERF_MONITOR
+        DRIVER_LCD_LVGL_UPDATE(lv_demo_benchmark());
+    #endif
+}
+
+static bool s_lcd_panel_and_rgb_init(void)
+{
+    // Initialize LCD
     esp_err_t ret = ESP_OK;
-
-    ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "RGB LCD Panel Initializing...");
-
-    s_handle_panel = NULL;
-    esp_lcd_rgb_panel_config_t panel_config = {
+    s_handle_lcd_panel = NULL;
+    esp_lcd_rgb_panel_config_t rgb_panel_config = {
         .clk_src = LCD_CLK_SRC_PLL160M,
         .timings = {
-            .pclk_hz = DRIVER_LCD_PIXEL_CLK_HZ,
-            .h_res = DRIVER_LCD_RESOLUTION_X,
-            .v_res = DRIVER_LCD_RESOLUTION_Y,
+            .pclk_hz = DRIVER_LCD_DISPLAY_PIXEL_CLK_HZ,
+            .h_res = DRIVER_LCD_DISPLAY_RESOLUTION_X,
+            .v_res = DRIVER_LCD_DISPLAY_RESOLUTION_Y,
             .hsync_pulse_width = 40,
             .hsync_back_porch = 40,
             .hsync_front_porch = 48,
@@ -72,12 +84,11 @@ static esp_err_t s_rgb_lcd_init(void)
             .vsync_front_porch = 13,
             .flags.pclk_active_neg = true
         },
-        .flags.fb_in_psram = true,
-        .data_width = DRIVER_LCD_DATA_WIDTH,
-        .bits_per_pixel = DRIVER_LCD_BITS_PER_PIXEL,
-        .num_fbs = DRIVER_LCD_NUM_FBS,
-        .sram_trans_align = 4,
-        .psram_trans_align = 64,
+        .data_width = DRIVER_LCD_DISPLAY_DATA_WIDTH,
+        .bits_per_pixel = DRIVER_LCD_DISPLAY_BITS_PER_PIXEL,
+        .num_fbs = DRIVER_LCD_DISPLAY_NUM_FBS,
+        .bounce_buffer_size_px = (DRIVER_LCD_DISPLAY_RESOLUTION_X * DRIVER_LCD_RGB_BOUNCE_BUFFER_HEIGHT),
+        .dma_burst_size = 64,
         .hsync_gpio_num = BSP_LCD_GPIO_HSYNC,
         .vsync_gpio_num = BSP_LCD_GPIO_VSYNC,
         .pclk_gpio_num = BSP_LCD_GPIO_PCLK,
@@ -100,49 +111,63 @@ static esp_err_t s_rgb_lcd_init(void)
             BSP_LCD_GPIO_DATA13,
             BSP_LCD_GPIO_DATA14,
             BSP_LCD_GPIO_DATA15
-        }
+        },
+        .flags.fb_in_psram = true,
     };
 
-    // Create New RGB Panel With This Configuration
-    ESP_GOTO_ON_ERROR(esp_lcd_new_rgb_panel(&panel_config, &s_handle_panel), err, DEBUG_TAG_DRIVER_LCD, "RGB Panel Create Fail");
-    ESP_GOTO_ON_ERROR(esp_lcd_panel_init(s_handle_panel) ,err, DEBUG_TAG_DRIVER_LCD, "LCD Init Fail");
+    ESP_GOTO_ON_ERROR(
+        esp_lcd_new_rgb_panel(&rgb_panel_config, &s_handle_lcd_panel),
+        err,
+        DEBUG_TAG_DRIVER_LCD,
+        "Lcd Rgb Panel Init Fail"
+    );
+    ESP_GOTO_ON_ERROR(
+        esp_lcd_panel_init(s_handle_lcd_panel),
+        err,
+        DEBUG_TAG_DRIVER_LCD,
+        "Lcd Panel Init Fail"
+    );
 
-    return ret;
-
+    return true;
     err:
-        if(s_handle_panel){
-            esp_lcd_panel_del(s_handle_panel);
-        }
-        return ret;
+        return false;
 }
 
-static esp_err_t s_lvgl_port_init(void)
+static bool s_lvgl_port_init(void)
 {
-    lvgl_port_cfg_t config_lvgl = {
-        .task_priority = 4,
-        .task_stack = 6144,
-        .task_affinity = -1,
-        .task_max_sleep_ms = 500,
-        .timer_period_ms = 5
-    };
+    // Initialize Lvgl
 
-    ESP_RETURN_ON_ERROR(lvgl_port_init(&config_lvgl), DEBUG_TAG_DRIVER_LCD, "Lvgl Port Init Fail");
+    esp_err_t ret = ESP_OK;
+    const lvgl_port_cfg_t lvgl_port_config = ESP_LVGL_PORT_INIT_CONFIG();
 
-    return ESP_OK;
+    ESP_GOTO_ON_ERROR(
+        lvgl_port_init(&lvgl_port_config),
+        err,
+        DEBUG_TAG_DRIVER_LCD,
+        "Lvgl Port Init Fail"
+    );
+
+    return true;
+    err:
+        return false;
 }
 
-static esp_err_t s_lvgl_config(void)
+static bool s_add_lcd_screen(void)
 {
-    uint32_t size_buffer;
+    // Add Lcd Screen
 
-    s_lv_display = NULL;
-    size_buffer = DRIVER_LCD_RESOLUTION_X * DRIVER_LCD_RESOLUTION_Y;
-    lvgl_port_display_cfg_t lvgl_disp_config = {
-        .panel_handle = s_handle_panel,
-        .buffer_size = size_buffer,
-        .double_buffer = true,
-        .hres = DRIVER_LCD_RESOLUTION_X,
-        .vres = DRIVER_LCD_RESOLUTION_Y,
+    s_display = NULL;
+    uint32_t buff_size = DRIVER_LCD_DISPLAY_RESOLUTION_X * DRIVER_LCD_DRAW_BUFF_HEIGHT;
+    #if DRIVER_LCD_LVGL_FULL_REFRESH || DRIVER_LCD_LVGL_DIRECT_MODE
+        buff_size = DRIVER_LCD_DISPLAY_RESOLUTION_X * DRIVER_LCD_DISPLAY_RESOLUTION_Y;
+    #endif
+
+    const lvgl_port_display_cfg_t display_config = {
+        .panel_handle = s_handle_lcd_panel,
+        .buffer_size = buff_size,
+        .double_buffer = DRIVER_LCD_DRAW_BUFF_DOUBLE,
+        .hres = DRIVER_LCD_DISPLAY_RESOLUTION_X,
+        .vres = DRIVER_LCD_DISPLAY_RESOLUTION_Y,
         .monochrome = false,
         .color_format = LV_COLOR_FORMAT_RGB565,
         .rotation = {
@@ -151,53 +176,32 @@ static esp_err_t s_lvgl_config(void)
             .mirror_y = false
         },
         .flags = {
-            .buff_dma = true,
-            .buff_spiram = true,
-            .full_refresh = false,
+            .buff_dma = false,
+            .buff_spiram = false,
+            #if DRIVER_LCD_LVGL_FULL_REFRESH
+            .full_refresh = true,
+            #elif DRIVER_LCD_LVGL_DIRECT_MODE
             .direct_mode = true,
-            .swap_bytes = false,
+            #endif
+            .swap_bytes = false
         }
     };
-
-    lvgl_port_display_rgb_cfg_t lvgl_rgb_config = {
+    const lvgl_port_display_rgb_cfg_t display_rgb_config = {
         .flags = {
+            #if DRIVER_LCD_RGB_BOUNCE_BUFFER_MODE
+            .bb_mode = true,
+            #else
             .bb_mode = false,
-            .avoid_tearing = true
+            #endif
+            #if DRIVER_LCD_LVGL_AVOID_TEAR
+            .avoid_tearing = true,
+            #else
+            .avoid_tearing = false,
+            #endif
         }
     };
 
-    s_lv_display = lvgl_port_add_disp_rgb(&lvgl_disp_config, &lvgl_rgb_config);
-    
-    if(!s_lv_display){
-        ESP_LOGE(DEBUG_TAG_DRIVER_LCD, "Lvgl Config Failed");
-    }
-    
-    return ESP_OK;
-}
+    s_display = lvgl_port_add_disp_rgb(&display_config, &display_rgb_config);
 
-static void s_lvgl_test_display(void)
-{
-    lv_obj_t *scr = lv_scr_act();
-
-    /* Label */
-    lv_obj_t *label = lv_label_create(scr);
-
-    lv_obj_set_size(scr, DRIVER_LCD_RESOLUTION_X, DRIVER_LCD_RESOLUTION_Y);
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0xCAD34A), LV_PART_MAIN);
-    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(
-        label, 
-        LV_SYMBOL_BELL" Hello world Espressif and LVGL "LV_SYMBOL_BELL"\n "LV_SYMBOL_WARNING" Test LVGL Project"LV_SYMBOL_WARNING
-    );    
-    lv_timer_handler();   // process pending tasks
-    lv_obj_update_layout(scr);
-    lv_obj_update_layout(label);
-    lv_obj_center(label);
-
-    
-    /* Button */
-    lv_obj_t *btn = lv_btn_create(scr);
-    label = lv_label_create(btn);
-    lv_label_set_text_static(label, "Rotate screen");
-    lv_obj_align(btn, LV_ALIGN_BOTTOM_MID, 0, -30);
+    return true;
 }
