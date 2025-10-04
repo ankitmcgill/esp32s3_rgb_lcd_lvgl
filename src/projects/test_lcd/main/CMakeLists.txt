@@ -3,7 +3,10 @@ idf_component_register(SRCS "main.c"
                             driver_chipinfo
                             driver_appinfo
                             driver_lcd
+                            driver_spiffs
+                            module_lcd
                             defines
+                            project_ui
                             project_defines
                         PRIV_REQUIRES
                             spi_flash
@@ -11,3 +14,9 @@ idf_component_register(SRCS "main.c"
                             log
                             freertos
                         INCLUDE_DIRS "")
+
+# Generate Spiffs Partition Binary From "spiffs_fs" folder And Flash To Controller
+spiffs_create_partition_image(spiff 
+    "../../../spiffs_fs" 
+    FLASH_IN_PROJECT
+)

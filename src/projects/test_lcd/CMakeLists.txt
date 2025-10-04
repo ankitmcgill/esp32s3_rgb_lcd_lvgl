@@ -39,9 +39,9 @@ set(EXTRA_COMPONENT_DIRS
 
     # Project Defines
     "./project_defines/"
-    
-    # Managed Components (Components Auto Downloaded From ESP-REGISTRY By idf_components.yml Dependency File)
-    "../../common/managed_components/"
+
+    # Project UI
+    "./project_ui/"
 )
 
 # Project Version
