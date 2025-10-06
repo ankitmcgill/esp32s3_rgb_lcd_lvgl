@@ -4,6 +4,7 @@ idf_component_register(SRCS "main.c"
                             driver_appinfo
                             driver_lcd
                             driver_spiffs
+                            module_lcd
                             defines
                             project_defines
                         PRIV_REQUIRES

@@ -1,4 +1,4 @@
-message(WARNING "Some potential issue detected!")
+message(INFORMATION "Compiling Squareline UI Code ...")
 
 file(GLOB_RECURSE
     srcs

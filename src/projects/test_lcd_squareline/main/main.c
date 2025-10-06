@@ -8,6 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "module_lcd.h"
 #include "driver_chipinfo.h"
 #include "driver_appinfo.h"
 #include "driver_lcd.h"
@@ -73,21 +74,24 @@ void app_main(void)
     ESP_LOGI(DEBUG_TAG_MAIN, "Init");
     ESP_LOGI(DEBUG_TAG_MAIN, "");
 
-    // Intialize Drivers & Modules
-    DRIVER_SPIFFS_Init();
-    DRIVER_LCD_Init();
-
+    // Initialize Spiffs & Filsystem
     memset((void*)buffer, 0, 256);
+    DRIVER_SPIFFS_Init();
     DRIVER_SPIFFS_PrintInfo();
     if(DRIVER_SPIFFS_ReadFile("/spiff/hw_info.txt", (char*)buffer)){
         ESP_LOGI(DEBUG_TAG_MAIN, "%s", (char*)buffer);
+    }else{
+        ESP_LOGI(DEBUG_TAG_MAIN, "Hw Info Read Failed"));
     }
+
+    // Intialize Drivers & Modules
+    DRIVER_LCD_Init();
+    MODULE_LCD_Init();
 
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called
     
-    while(true)
-    {
+    while(true){
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 

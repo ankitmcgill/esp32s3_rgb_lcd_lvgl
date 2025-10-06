@@ -33,9 +33,9 @@ void app_main(void)
     DRIVER_APPINFO_Init();
 
     esp_chip_info_t c_info;
-    uint8_t buffer[50] = {0};
     uint32_t size_flash;
     uint32_t size_ram;
+    uint8_t* buffer = (uint8_t*)malloc(512);
 
     DRIVER_CHIPINFO_GetChipInfo(&c_info);
     DRIVER_CHIPINFO_GetChipID(buffer);
@@ -76,12 +76,15 @@ void app_main(void)
     ESP_LOGI(DEBUG_TAG_MAIN, "");
 
     // Initialize Spiffs & Filsystem
+    memset((void*)buffer, 0, 512);
     DRIVER_SPIFFS_Init();
-    memset((void*)buffer, 0, 256);
     DRIVER_SPIFFS_PrintInfo();
     if(DRIVER_SPIFFS_ReadFile("/spiff/hw_info.txt", (char*)buffer)){
         ESP_LOGI(DEBUG_TAG_MAIN, "%s", (char*)buffer);
+    }else{
+        ESP_LOGE(DEBUG_TAG_MAIN, "Hw Info Read Failed");
     }
+    free(buffer);
 
     // Intialize Drivers & Modules
     DRIVER_LCD_Init();

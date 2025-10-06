@@ -108,12 +108,9 @@ void DRIVER_SPIFFS_PrintInfo(void)
 
     if(ret == ESP_OK){
         ESP_LOGI(DEBUG_TAG_DRIVER_SPIFFS, "-----------------------------------------------");
-        ESP_LOGI(DEBUG_TAG_DRIVER_SPIFFS,
-            "USED / FREE / TOTAL BYTES : %u / %u / %u", 
-            used_bytes,
-            total_bytes - used_bytes,
-            total_bytes
-        );
+        ESP_LOGI(DEBUG_TAG_DRIVER_SPIFFS, "TOTAL BYTES : %u", total_bytes);
+        ESP_LOGI(DEBUG_TAG_DRIVER_SPIFFS, "USED BYTES : %u", used_bytes);
+        ESP_LOGI(DEBUG_TAG_DRIVER_SPIFFS, "FREE BYTES : %u", total_bytes - used_bytes);
         ESP_LOGI(DEBUG_TAG_DRIVER_SPIFFS, "FILE COUNT : %u", file_count);
         ESP_LOGI(DEBUG_TAG_DRIVER_SPIFFS, "-----------------------------------------------");
 

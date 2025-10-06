@@ -44,7 +44,7 @@ set(EXTRA_COMPONENT_DIRS
     "./project_defines/"
     
     # Managed Components (Components Auto Downloaded From ESP-REGISTRY By idf_components.yml Dependency File)
-    "../../common/managed_components/"
+    # "../../common/managed_components/"
 
     # Squareline Export UI 
     "./squareline_project_test_lcd/export/ui"
