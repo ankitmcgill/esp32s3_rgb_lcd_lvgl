@@ -3,7 +3,9 @@ idf_component_register(SRCS
                        INCLUDE_DIRS
                          "include"
                        PRIV_REQUIRES
+                            lvgl__lvgl
                             esp_lcd
+                            esp_timer
                             esp_common
                             defines
                             bsp
