@@ -9,7 +9,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#define DRIVER_LCD_LVGL_TICK_PERIOD_MS      (5)
+#define DRIVER_LCD_LVGL_TICK_PERIOD_MS      (10)
 
 #define DRIVER_LCD_DISPLAY_RESOLUTION_X     (800)
 #define DRIVER_LCD_DISPLAY_RESOLUTION_Y     (480)

@@ -10,7 +10,6 @@
 #include "esp_log.h"
 #include "esp_check.h"
 #include "esp_idf_version.h"
-#include "esp_timer.h"
 #include "driver/i2c_master.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_rgb.h"
@@ -36,9 +35,9 @@ static _lock_t s_lvgl_api_lock;
 static bool s_lcd_panel_setup(void);
 static bool s_lvgl_setup(void);
 static void s_task_lvgl(void *arg);
-static bool s_lcd_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx);
-static void s_lvgl_tick_cb(void *arg);
+static void s_lvgl_timer_handler(void);
 static bool s_lcd_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data);
+static bool s_lcd_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx);
 static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map);
 
 // External Functions
@@ -73,11 +72,7 @@ void DRIVER_LCD_Demo(void)
     // 1. Component Config -> LVGL Configuration -> Others -> Show CPU Usage And Fps Count
 
     #if defined CONFIG_LV_BUILD_DEMOS && defined CONFIG_LV_USE_SYSMON && defined CONFIG_LV_USE_PERF_MONITOR
-        // DRIVER_LCD_LVGL_UPDATE(lv_demo_benchmark());
-
-        _lock_acquire(&s_lvgl_api_lock);
         lv_demo_benchmark();
-        _lock_release(&s_lvgl_api_lock);
         ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lvgl Demo", s_component_type);
     #endif
 }
@@ -95,7 +90,7 @@ static bool s_lcd_panel_setup(void)
     esp_lcd_rgb_panel_config_t rgb_panel_config = {
         .clk_src = LCD_CLK_SRC_PLL160M,
         .timings = {
-            .pclk_hz = (16.5 * 1000 * 1000),
+            .pclk_hz = (21 * 1000 * 1000),
             .h_res = DRIVER_LCD_DISPLAY_RESOLUTION_X,
             .v_res = DRIVER_LCD_DISPLAY_RESOLUTION_Y,
             .hsync_pulse_width = 40,
@@ -157,14 +152,16 @@ static bool s_lcd_panel_setup(void)
         "Esp_lcd Panel Init Fail"
     );
 
-    // Register Panel Event Callback For Vsync
+    // Register Panel Event Callbacks
     ESP_GOTO_ON_ERROR(esp_lcd_rgb_panel_register_event_callbacks(s_handle_lcd_panel, &cbs, NULL),
         err,
         DEBUG_TAG_DRIVER_LCD,
         "ESP_lcd Panel Cb Register Fail"
     );
 
+    ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lcd Panel Setup Done");
     return true;
+
     err:
         return false;
 }
@@ -176,12 +173,7 @@ static bool s_lvgl_setup(void)
     esp_err_t ret = ESP_OK;
     lv_color16_t* buf1 = NULL;
     lv_color16_t* buf2 = NULL;
-    esp_timer_handle_t lvgl_tick_timer;
     size_t buf_size = (DRIVER_LCD_DISPLAY_RESOLUTION_X * DRIVER_LCD_DISPLAY_RESOLUTION_Y * sizeof(lv_color16_t));
-    const esp_timer_create_args_t lvgl_timer_args = {
-        .callback = &s_lvgl_tick_cb,
-        .name = "lvgl_tick"
-    };
 
     // Initialize Lvgl
     lv_init();
@@ -207,22 +199,6 @@ static bool s_lvgl_setup(void)
 
     ESP_LOGI(DEBUG_TAG_LVGL, "Lvgl Display Created");
 
-    // Setup Lvgl Tick Timer
-    lvgl_tick_timer = NULL;
-    ESP_GOTO_ON_ERROR(
-        esp_timer_create(&lvgl_timer_args, &lvgl_tick_timer),
-        err,
-        DEBUG_TAG_DRIVER_LCD,
-        "Lvgl Tick Timer Create Fail"
-    );
-
-    ESP_GOTO_ON_ERROR(
-        esp_timer_start_periodic(lvgl_tick_timer, DRIVER_LCD_LVGL_TICK_PERIOD_MS * 1000),
-        err,
-        DEBUG_TAG_DRIVER_LCD,
-        "Lvgl Tick Start Fail"
-    );
-
     // Create Lvgl Task
     xTaskCreate(
         s_task_lvgl,
@@ -232,11 +208,9 @@ static bool s_lvgl_setup(void)
         TASK_PRIORITY_LVGL,
         &s_handle_task_lvgl
     );
-    ESP_LOGI(DEBUG_TAG_LVGL, "Lvgl Task Created");
 
+    ESP_LOGI(DEBUG_TAG_LVGL, "Lvgl Task Created");
     return true;
-    err:
-        return false;
 }
 
 static void s_task_lvgl(void *arg)
@@ -245,32 +219,15 @@ static void s_task_lvgl(void *arg)
 
     ESP_LOGI(DEBUG_TAG_LVGL, "Starting LVGL task");
 
-    uint32_t time_till_next_ms = 0;
-    uint32_t time_threshold_ms = (DRIVER_LCD_LVGL_TICK_PERIOD_MS * 1000) / CONFIG_FREERTOS_HZ;
     while(true) {
-        _lock_acquire(&s_lvgl_api_lock);
-        time_till_next_ms = lv_timer_handler();
-        _lock_release(&s_lvgl_api_lock);
-
-        // In Case Of Triggering A Task Watch Dog Time Out
-        time_till_next_ms = MAX(time_till_next_ms, time_threshold_ms);
-        vTaskDelay(time_till_next_ms);
+        s_lvgl_timer_handler();
+        vTaskDelay(pdMS_TO_TICKS(DRIVER_LCD_LVGL_TICK_PERIOD_MS));
     }
 }
 
-// static bool s_lcd_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
-// {
-//     // Notify Lvgl Flush Ready
-
-//     lv_display_t *disp = (lv_display_t *)user_ctx;
-//     lv_display_flush_ready(disp);
-
-//     return false;
-// }
-
-static void s_lvgl_tick_cb(void *arg)
+static void s_lvgl_timer_handler(void)
 {
-    // Lvgl Tick Timer Cb
+    // Lvgl Timer Handler
 
     // Tell Lvgl How Many Milliseconds Have Elapsed
     lv_tick_inc(DRIVER_LCD_LVGL_TICK_PERIOD_MS);
@@ -278,7 +235,9 @@ static void s_lvgl_tick_cb(void *arg)
 
 static bool s_lcd_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data)
 {
-    // Esp_lcd Vsync Cb
+    // Esp_lcd Panel Vsync Cb
+
+    ESP_EARLY_LOGI(DEBUG_TAG_DRIVER_LCD, "vsync cb");
 
     BaseType_t high_task_awoken = pdFALSE;
 
@@ -291,6 +250,20 @@ static bool s_lcd_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb
     // lv_display_flush_ready(disp);
 
     return (high_task_awoken == pdTRUE);
+}
+
+static bool s_lcd_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
+{
+    // Esp_lcd Panel Color Trans Done Cb
+
+    ESP_EARLY_LOGI(DEBUG_TAG_DRIVER_LCD, "color trans done cb");
+
+    // Notify Lvgl Flush Ready
+
+    lv_display_t *disp = (lv_display_t *)user_ctx;
+    lv_display_flush_ready(disp);
+
+    return false;
 }
 
 static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
