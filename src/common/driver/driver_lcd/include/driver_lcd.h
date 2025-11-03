@@ -9,7 +9,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#define DRIVER_LCD_DISPLAY_PIXEL_CLK_HZ     (18 * 1000 * 1000)
+#define DRIVER_LCD_DISPLAY_PIXEL_CLK_HZ     (21 * 1000 * 1000)
 
 #define DRIVER_LCD_LVGL_UPDATE(x)   \
     lvgl_port_lock(portMAX_DELAY);  \
