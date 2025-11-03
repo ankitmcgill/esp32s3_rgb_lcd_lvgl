@@ -36,11 +36,16 @@ bool MODULE_LCD_Init(void)
         &s_task_handle
     );
 
-    DRIVER_LCD_Demo();
-
     ESP_LOGI(DEBUG_TAG_MODULE_LCD, "Type %u. Init", s_component_type);
 
     return true;
+}
+
+void MODULE_LCD_Demo(void)
+{
+    //Display LCD Demo
+
+    DRIVER_LCD_Demo();
 }
 
 static void s_task_function(void *pvParameters)

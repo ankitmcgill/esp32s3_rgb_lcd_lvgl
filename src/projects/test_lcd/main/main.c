@@ -91,6 +91,7 @@ void app_main(void)
     MODULE_LCD_Init();
 
     // Initialize Project UI
+    MODULE_LCD_Demo();
 
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called
