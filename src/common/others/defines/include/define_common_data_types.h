@@ -6,21 +6,33 @@
 
 #include "driver_wifi.h"
 
+typedef struct
+{
+    uint8_t message;
+}message_item_t;
+typedef struct
+{
+    QueueHandle_t handle;
+    uint8_t count;
+}message_queue_t;
+
+typedef struct
+{
+    uint8_t notification;
+    uint8_t viewer_count;
+}notification_item_t;
+
+typedef struct
+{
+    QueueHandle_t handle;
+    uint8_t count;
+}notification_queue_t;
+
 #define BIT_VALUE(x)    (1 << x)
+
 typedef enum{
     COMPONENT_TYPE_NON_TASK = 0,
     COMPONENT_TYPE_TASK
 }rtos_component_type_t;
-
-typedef enum{
-    NOTIFICATION_TYPE_DRIVER_WIFI = 0
-}notification_type_mask_t;
-
-typedef struct{
-    uint32_t mask;
-    union{
-        driver_wifi_notification_t notification_driver_wifi;
-    }notification;
-}notification_type_t;
 
 #endif
