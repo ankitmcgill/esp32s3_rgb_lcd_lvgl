@@ -1,10 +1,7 @@
-idf_component_register(SRCS "driver_wifi.c"
+idf_component_register(SRCS "util_dataqueue.c"
                        INCLUDE_DIRS "include"
                        PRIV_REQUIRES
-                            util_dataqueue
                             defines
                        REQUIRES
-                            esp_wifi
-                            nvs_flash
                             freertos
 )

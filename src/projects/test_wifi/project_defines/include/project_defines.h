@@ -8,7 +8,7 @@
 
 #define DEBUG_TAG_MAIN          ("Main")
 
-#define DEFAULT_WIFI_SSID       ("Ankit_wifi")
-#define DEFAULT_WIFI_PASSWORD   ("casa@2021")
+#define DEFAULT_WIFI_SSID       ("Hotspot nandu")
+#define DEFAULT_WIFI_PASSWORD   ("12345678")
 
 #endif

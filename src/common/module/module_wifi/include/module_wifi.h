@@ -10,14 +10,16 @@
 #include <stdbool.h>
 
 #include "driver_wifi.h"
+#include "util_dataqueue.h"
 
-#define MODULE_WIFI_MESSAGE_QUEUE_MAX           (2)
-#define MODULE_WIFI_WIFI_CONNECT_TIMEOUT_SEC    (60)
+#define MODULE_WIFI_DATAQUEUE_MAX               (3)
+#define MODULE_WIFI_NOTIFICATION_TARGET_MAX     (1)
+#define MODULE_WIFI_WIFI_CONNECT_TIMEOUT_SEC    (15)
 #define MODULE_WIFI_WIFI_CONNECT_RETRY_MAX      (2)
 
 typedef enum {
-    MODULE_WIFI_MESSAGE_CONNECT = 0
-}module_wifi_message_type_t;
+    MODULE_WIFI_COMMAND_CONNECT = 0
+}module_wifi_command_type_t;
 
 typedef enum{
     MODULE_WIFI_STATE_IDLE = 0,
@@ -37,6 +39,6 @@ typedef enum{
 
 bool MODULE_WIFI_Init(void);
 
-bool MODULE_WIFI_SendMessage(module_wifi_message_type_t message, TickType_t wait);
+bool MODULE_WIFI_AddCommand(util_dataqueue_item_t* dq_i);
 
 #endif

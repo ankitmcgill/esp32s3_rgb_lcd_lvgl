@@ -7,7 +7,6 @@
 
 #include "module_wifi.h"
 #include "define_common_data_types.h"
-#include "define_rtos_globals.h"
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
 
@@ -17,15 +16,20 @@ TaskHandle_t handle_task_module_wifi;
 // Local Variables
 static module_wifi_state_t s_state;
 static module_wifi_state_t s_state_prev;
+static util_dataqueue_t s_dataqueue;
+static uint8_t s_notification_targets_count;
+static util_dataqueue_t* s_notification_targets[MODULE_WIFI_NOTIFICATION_TARGET_MAX];
+static module_wifi_state_t s_wifi_credential_source;
 static rtos_component_type_t s_component_type;
-static message_queue_t s_message_queue;
-static esp_timer_handle_t s_timer_handle;
-static uint8_t s_retry_count;
+static esp_timer_handle_t s_wifi_timer_handle;
+static uint8_t s_wifi_retry_count;
 
 // Local Functions
+static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait);
 static void s_state_set(module_wifi_state_t newstate);
 static void s_state_mainiter(void);
 static void s_task_function(void *pvParameters);
+static void s_timer_cb(void *arg);
 
 // External Functions
 bool MODULE_WIFI_Init(void)
@@ -37,9 +41,9 @@ bool MODULE_WIFI_Init(void)
     s_state_prev = -1;
     s_state_set(MODULE_WIFI_STATE_IDLE);
 
-    // Create Incoming Message Queue
-    s_message_queue.handle = xQueueCreate(MODULE_WIFI_MESSAGE_QUEUE_MAX, sizeof(message_item_t));
-    s_message_queue.count = 0;
+    // Create Data Queue
+    UTIL_DATAQUEUE_Create(&s_dataqueue, MODULE_WIFI_DATAQUEUE_MAX);
+    s_notification_targets_count = 0;
 
     // Create Task
     xTaskCreate(
@@ -51,25 +55,38 @@ bool MODULE_WIFI_Init(void)
         &handle_task_module_wifi
     );
 
+    // Setup Wifi Connect Timer
+    const esp_timer_create_args_t timer_args = {
+        .callback = &s_timer_cb,
+        .arg = (void*)0,     // optional user data
+        .name = "one-shot"
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&timer_args, &s_wifi_timer_handle));
+
+    // Add Notification Targets
+    DRIVER_WIFI_AddNotificationTarget(&s_dataqueue);
+
     ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Type %u. Init", s_component_type);
 
     return true;
 }
 
-bool MODULE_WIFI_SendMessage(module_wifi_message_type_t message, TickType_t wait)
+bool MODULE_WIFI_AddCommand(util_dataqueue_item_t* dq_i)
 {
-    // Send Message
+    // Add Command
 
-    if(s_message_queue.count >= MODULE_WIFI_MESSAGE_QUEUE_MAX){
-        return false;
+    return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
+}
+
+static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
+{
+    // Send Notification
+
+    for(uint8_t i = 0; i < s_notification_targets_count; i++){
+        UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait);
     }
 
-    message_item_t message_item;
-    message_item.message = message;
-    BaseType_t ret = xQueueSend(s_message_queue.handle, (void*)&message_item, wait);
-    s_message_queue.count += 1;
-
-    return (ret == pdPASS);
+    return true;
 }
 
 static void s_state_set(module_wifi_state_t newstate)
@@ -90,20 +107,23 @@ static void s_state_mainiter(void)
 {
     // State Mainiter
     
-    driver_wifi_message_type_t message;
-
+    util_dataqueue_item_t dq_i;
+    
     switch(s_state)
     {
         case MODULE_WIFI_STATE_IDLE:
-            s_state_set(MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS);
+            // Do Nothing
             break;
 
         case MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS:
+            s_wifi_retry_count = 0;
             if(DRIVER_WIFI_CheckSavedWifiCredentials())
             {
-                ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Saved Wi-Fi Credential Found");
-
                 // WiFi Connect
+                s_wifi_credential_source = MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS;
+                s_wifi_retry_count = MODULE_WIFI_WIFI_CONNECT_RETRY_MAX;
+                s_state_set(MODULE_WIFI_STATE_CONNECT);
+                break;
             }
 
             // No Saved Credentials
@@ -112,15 +132,21 @@ static void s_state_mainiter(void)
             break;
 
         case MODULE_WIFI_STATE_CHECK_DEFAULT_CREDENTIALS:
-            if(defined(DEFAULT_WIFI_SSID) && DEFAULT_WIFI_SSID != ""){
-                if(defined(DEFAULT_WIFI_PASSWORD) && DEFAULT_WIFI_PASSWORD != ""){
+            s_wifi_retry_count = 0;
+            #if defined(DEFAULT_WIFI_SSID) && defined(DEFAULT_WIFI_PASSWORD)
                     ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Default Wi-Fi Credential Found");
-                    ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "SSID: %s", DEFAULT_WIFI_SSID);
-                    ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Password: %s", DEFAULT_WIFI_PASSWORD);
+                    ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "   SSID: %s", DEFAULT_WIFI_SSID);
+                    ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "   Password: %s", DEFAULT_WIFI_PASSWORD);
+
+                    // Set Wifi Credentials
+                    DRIVER_WIFI_SetWifiCredentials((uint8_t*)DEFAULT_WIFI_SSID, (uint8_t*)DEFAULT_WIFI_PASSWORD);
 
                     // WiFi Connect
-                }
-            }
+                    s_wifi_credential_source = MODULE_WIFI_STATE_CHECK_DEFAULT_CREDENTIALS;
+                    s_wifi_retry_count = MODULE_WIFI_WIFI_CONNECT_RETRY_MAX;
+                    s_state_set(MODULE_WIFI_STATE_CONNECT);
+                    break;
+            #endif
 
             // No Default Credentials
             ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "No Default Wi-Fi Credential Found");
@@ -128,8 +154,10 @@ static void s_state_mainiter(void)
             break;
 
         case MODULE_WIFI_STATE_SCAN:
-            message = DRIVER_WIFI_MESSAGE_SCAN;
-            DRIVER_WIFI_SendMessage(message, 0);
+            s_wifi_retry_count = 0;
+            dq_i.data_type = DATA_TYPE_COMMAND;
+            dq_i.data = DRIVER_WIFI_COMMAND_SCAN;
+            DRIVER_WIFI_AddCommand(&dq_i);
             s_state_set(MODULE_WIFI_STATE_SCANNING);
             break;
         
@@ -142,13 +170,52 @@ static void s_state_mainiter(void)
             break;
 
         case MODULE_WIFI_STATE_SMARTCONFIG:
+            break;
+        
         case MODULE_WIFI_STATE_CONNECT:
+            dq_i.data_type = DATA_TYPE_COMMAND;
+            dq_i.data = DRIVER_WIFI_COMMAND_CONNECT;
+            DRIVER_WIFI_AddCommand(&dq_i);
+
+            // Start Timer
+            ESP_ERROR_CHECK(esp_timer_start_once(s_wifi_timer_handle, MODULE_WIFI_WIFI_CONNECT_TIMEOUT_SEC * 1000000));
+            s_state_set(MODULE_WIFI_STATE_CONNECTING);
+            break;
+
         case MODULE_WIFI_STATE_CONNECTING:
+            // Do Nothing
+            break;
+        
         case MODULE_WIFI_STATE_CONNECTED:
+            // Do Nothing
+            break;
+
         case MODULE_WIFI_STATE_GOT_IP:
+            // Stop Timer
+            if(esp_timer_is_active(s_wifi_timer_handle)){
+                    ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
+                }
+            s_state_set(MODULE_WIFI_STATE_IDLE);
+            break;
+        
         case MODULE_WIFI_STATE_LOST_IP:
         case MODULE_WIFI_STATE_DISCONNECTED:
+            // Lost IP
+            // Restart Connection Logic
+            if(s_state_prev == MODULE_WIFI_STATE_IDLE){
+                // Start New Connection Attempt
+                if(esp_timer_is_active(s_wifi_timer_handle)){
+                    ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
+                }
+                s_state_set(MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS);
+                break;
+            }
+            // Part Of Existing Connection Attempt
+            // Do Nothing. Let Timer Expire
             break;
+        
+            default:
+                break;
     }
 }
 
@@ -156,37 +223,58 @@ static void s_task_function(void *pvParameters)
 {
     // Task Function
 
-    BaseType_t ret;
-    message_item_t message_item;
-    notification_item_t notification_item;
+    util_dataqueue_item_t dq_i;
 
     ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Starting task");
 
     while(true){
-        // Check For Incoming Messages
-        if(s_message_queue.count != 0)
+        // Check Data Queue
+        if(UTIL_DATAQUEUE_MessageCheck(&s_dataqueue))
         {
-            ret = xQueueReceive(s_message_queue.handle, (void*)&message_item, 0);
-            if(ret == pdPASS){
-                ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "New Message Received. Type : %u", message_item.message);
+            if(UTIL_DATAQUEUE_MessageGet(&s_dataqueue, &dq_i, 0))
+            {
+                ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "New In DataQueue. Type %u, Data %u", dq_i.data_type, dq_i.data);
                 
-                s_message_queue.count -= 1;
-
-                switch(message_item.message)
+                if(dq_i.data_type == DATA_TYPE_COMMAND)
                 {
-                    case MODULE_WIFI_MESSAGE_CONNECT:
-                        s_state_set(MODULE_WIFI_MESSAGE_CONNECT);
-                        break;
+                    switch(dq_i.data)
+                    {
+                        case MODULE_WIFI_COMMAND_CONNECT:
+                            s_state_set(MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS);
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
+                }
+                else if(dq_i.data_type == DATA_TYPE_NOTIFICATION)
+                {
+                    switch(dq_i.data)
+                    {
+                        case DRIVER_WIFI_NOTIFICATION_SCAN_DONE:
+                            break;
+                        
+                        case DRIVER_WIFI_NOTIFICATION_CONNECTED:
+                            s_state_set(MODULE_WIFI_STATE_CONNECTED);
+                            break;
+                        
+                        case DRIVER_WIFI_NOTIFICATION_GOT_IP:
+                            s_state_set(MODULE_WIFI_STATE_GOT_IP);
+                            break;
+                        
+                        case DRIVER_WIFI_NOTIFICATION_LOST_IP:
+                            s_state_set(MODULE_WIFI_STATE_LOST_IP);
+                            break;
+
+                        case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
+                            s_state_set(MODULE_WIFI_STATE_DISCONNECTED);
+                            break;
+                        
+                        default:
+                            break;
+                    }
                 }
             }
-        }
-
-        // Check For Notifications
-        if(DRIVER_WIFI_CheckNotification((driver_wifi_notification_type_t*)&notification_item.notification, 0)){
-
         }
 
         // Run State Mainiter
@@ -198,59 +286,34 @@ static void s_task_function(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-//         switch(s_state)
-//         {
-//             case MODULE_WIFI_STATE_IDLE:
-//                 s_state_set(MODULE_WIFI_CHECK_PROVISIONED);
-//                 break;
+static void s_timer_cb(void *arg)
+{
+    // Timer Callback
 
-//             case MDOULE_WIFI_CHECK_PROVISIONED:
-//                 s_state_set(MODULE_WIFI_STATE_CONNECT_DEFAULT);
-//                 break;
-            
-//             case MODULE_WIFI_STATE_CONNECT_DEFAULT:
-//                 #if defined(DEFAULT_WIFI_SSID) && defined(DEFAULT_WIFI_PASSWORD)
-//                     if(strlen(DEFAULT_WIFI_SSID)!=0 && strlen(DEFAULT_WIFI_PASSWORD)!=0)
-//                     {
-//                         ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Connecting To Default Wifi: %s", DEFAULT_WIFI_SSID);
-                        
-//                         DRIVER_WIFI_Connect(
-//                             DEFAULT_WIFI_SSID,
-//                             DEFAULT_WIFI_PASSWORD
-//                         );
-//                         s_set_state(MODULE_WIFI_STATE_CONNECTING);
-//                     }
-//                     break;
-//                 #endif
+    if(s_wifi_retry_count <= MODULE_WIFI_WIFI_CONNECT_RETRY_MAX){
+        s_wifi_retry_count += 1;
+        s_state_set(MODULE_WIFI_STATE_CONNECT);
+        return;
+    }
 
-//                 // Default Wifi SSID Or Password Not Avaialable
-//                 s_state_set(MODULE_WIFI_STATE_PROVISION_SMARTCONFIG);
-//                 break;
-
-//             case MODULE_WIFI_STATE_PROVISION_SMARTCONFIG:
-//                 break;
-            
-//             case MODULE_WIFI_STATE_CONNECTING:
-//                 ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "WiFi Connecting...");
-//                 break;
-            
-//             case MODULE_WIFI_STATE_CONNECTED:
-//                 ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "WiFi Connected");
-//                 break;
-            
-//             case MODULE_WIFI_STATE_DISCONNECTED:
-//                 ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "WiFi Connected");
-                
-//                 // Re-start Wifi Connection Cycle
-//                 s_state_set(MODULE_WIFI_STATE_IDLE);
-//                 break;
-
-//             default:
-//                 break;
-//         }
-
+    // Retries Exhausted
+    // Resume Wifi Credentials State Machine
+    ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "%u Connect Retries Exhausted", MODULE_WIFI_WIFI_CONNECT_RETRY_MAX);
+    switch(s_wifi_credential_source)
+    {
+        case MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS:
+            s_state_set(MODULE_WIFI_STATE_CHECK_DEFAULT_CREDENTIALS);
+            break;
         
-//     };
-
-//     vTaskDelete(NULL);
-// }
+        case MODULE_WIFI_STATE_CHECK_DEFAULT_CREDENTIALS:
+            s_state_set(MODULE_WIFI_STATE_SCAN);
+            break;
+        
+        case MODULE_WIFI_STATE_SMARTCONFIG:
+            break;
+        
+        default:
+            s_state_set(MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS);
+            break;
+    }
+}

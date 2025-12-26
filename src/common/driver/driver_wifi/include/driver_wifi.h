@@ -10,20 +10,23 @@
 #include <stdbool.h>
 
 #include "esp_wifi.h"
+#include "util_dataqueue.h"
 
 #define DRIVER_WIFI_LEN_SSID_MAX                (32)
-#define DRIVER_WIFI_LED_PWD_MAX                 (64)
+#define DRIVER_WIFI_LEN_PWD_MAX                 (64)
 
 #define DRIVER_WIFI_SCAN_RESULTS_COUNT_MAX      (10)
 
-#define DRIVER_WIFI_MESSAGE_QUEUE_MAX           (2)
-#define DRIVER_WIFI_NOTIFICATION_QUEUE_MAX      (2)
+#define DRIVER_WIFI_DATAQUEUE_MAX               (3)
+#define DRIVER_WIFI_NOTIFICATION_TARGET_MAX     (1)
+
+#define DRIVER_WIFI_HOSTNAME                    "ESP32-LVGL"
 
 typedef enum {
-    DRIVER_WIFI_MESSAGE_SCAN = 0,
-    DRIVER_WIFI_MESSAGE_CONNECT,
-    DRIVER_WIFI_MESSAGE_DISCONNECT
-}driver_wifi_message_type_t;
+    DRIVER_WIFI_COMMAND_SCAN = 0,
+    DRIVER_WIFI_COMMAND_CONNECT,
+    DRIVER_WIFI_COMMAND_DISCONNECT
+}driver_wifi_command_type_t;
 
 typedef enum{
     DRIVER_WIFI_NOTIFICATION_SCAN_DONE = 0,
@@ -35,10 +38,10 @@ typedef enum{
 
 bool DRIVER_WIFI_Init(void);
 
-bool DRIVER_WIFI_SendMessage(driver_wifi_message_type_t message, TickType_t wait);
-bool DRIVER_WIFI_CheckNotification(driver_wifi_notification_type_t* notification, TickType_t wait);
-
 bool DRIVER_WIFI_CheckSavedWifiCredentials(void);
-void DRIVER_WIFI_Connect(char* ssid, char* password);
+void DRIVER_WIFI_SetWifiCredentials(uint8_t* ssid, uint8_t* pwd);
+
+bool DRIVER_WIFI_AddCommand(util_dataqueue_item_t* dq_i);
+bool DRIVER_WIFI_AddNotificationTarget(util_dataqueue_t* dq);
 
 #endif
