@@ -170,7 +170,15 @@ static void s_state_mainiter(void)
             break;
 
         case MODULE_WIFI_STATE_SMARTCONFIG:
+            dq_i.data_type = DATA_TYPE_COMMAND;
+            dq_i.data = DRIVER_WIFI_COMMAND_SMARTCONFIG;
+            DRIVER_WIFI_AddCommand(&dq_i);
+            s_state_set(MODULE_WIFI_STATE_SMARTCONFIG_WAITING);
             break;
+        
+            case MODULE_WIFI_STATE_SMARTCONFIG_WAITING:
+                // Do Nothing
+                break;
         
         case MODULE_WIFI_STATE_CONNECT:
             dq_i.data_type = DATA_TYPE_COMMAND;
@@ -202,16 +210,11 @@ static void s_state_mainiter(void)
         case MODULE_WIFI_STATE_DISCONNECTED:
             // Lost IP
             // Restart Connection Logic
-            if(s_state_prev == MODULE_WIFI_STATE_IDLE){
-                // Start New Connection Attempt
-                if(esp_timer_is_active(s_wifi_timer_handle)){
-                    ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
-                }
-                s_state_set(MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS);
-                break;
+            // Start New Connection Attempt
+            if(esp_timer_is_active(s_wifi_timer_handle)){
+                ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
             }
-            // Part Of Existing Connection Attempt
-            // Do Nothing. Let Timer Expire
+            s_state_set(MODULE_WIFI_STATE_CHECK_SAVED_CREDENTIALS);
             break;
         
             default:
@@ -252,6 +255,11 @@ static void s_task_function(void *pvParameters)
                     switch(dq_i.data)
                     {
                         case DRIVER_WIFI_NOTIFICATION_SCAN_DONE:
+                            s_state_set(MODULE_WIFI_STATE_SCAN_DONE);
+                            break;
+
+                        case DRIVER_WIFI_NOTIFICATION_SMARTCONFIG_GOT_CREDENTIALS:
+                            s_state_set(MODULE_WIFI_STATE_CONNECT);
                             break;
                         
                         case DRIVER_WIFI_NOTIFICATION_CONNECTED:
@@ -263,11 +271,17 @@ static void s_task_function(void *pvParameters)
                             break;
                         
                         case DRIVER_WIFI_NOTIFICATION_LOST_IP:
-                            s_state_set(MODULE_WIFI_STATE_LOST_IP);
+                            // Ignore If Not In Idle State
+                            if(s_state == MODULE_WIFI_STATE_IDLE){
+                                s_state_set(MODULE_WIFI_STATE_LOST_IP);
+                            }
                             break;
 
                         case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
-                            s_state_set(MODULE_WIFI_STATE_DISCONNECTED);
+                            // Ignore If Not In Idle State
+                            if(s_state == MODULE_WIFI_STATE_IDLE){
+                                s_state_set(MODULE_WIFI_STATE_DISCONNECTED);
+                            }
                             break;
                         
                         default:

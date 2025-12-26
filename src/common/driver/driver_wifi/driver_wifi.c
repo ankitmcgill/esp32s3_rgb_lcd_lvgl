@@ -232,6 +232,11 @@ static void s_task_function(void *pvParameters)
                             ESP_ERROR_CHECK(esp_wifi_scan_start(&wifi_scan_config, false));
                             break;
 
+                        case DRIVER_WIFI_COMMAND_SMARTCONFIG:
+                            smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
+                            ESP_ERROR_CHECK(esp_smartconfig_start(&cfg));
+                            break;
+
                         case DRIVER_WIFI_COMMAND_CONNECT:
                             s_wifi_connect();
                             break;
@@ -348,31 +353,37 @@ static void s_event_handler_smartconfig(void *arg, esp_event_base_t event_base, 
 {
     // Smartconfig Event Handler
 
+    util_dataqueue_item_t dq_i;
+    dq_i.data_type = DATA_TYPE_NOTIFICATION;
+
     if(event_base == SC_EVENT)
     {
         switch(event_id)
         {
             case SC_EVENT_SCAN_DONE:
-                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Event - SC_EVENT_SCAN_DONE");
+                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "SC_EVENT_SCAN_DONE");
                 break;
             
             case SC_EVENT_FOUND_CHANNEL:
-                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Event - SC_EVENT_FOUND_CHANNEL");
+                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "SC_EVENT_FOUND_CHANNEL");
                 break;
             
             case SC_EVENT_GOT_SSID_PSWD:
-                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Event - SC_EVENT_GOT_SSID_PSWD");
+                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "SC_EVENT_GOT_SSID_PSWD");
 
                 smartconfig_event_got_ssid_pswd_t *evt = event_data;
-                memset(s_ssid, 0, 32);
-                memset(s_password, 0, 64);
-                memcpy(s_ssid, evt->ssid, 32);
-                memcpy(s_password, evt->password, 64);
+                memset(s_ssid, 0, DRIVER_WIFI_LEN_SSID_MAX);
+                memset(s_password, 0, DRIVER_WIFI_LEN_PWD_MAX);
+                memcpy(s_ssid, evt->ssid, DRIVER_WIFI_LEN_SSID_MAX);
+                memcpy(s_password, evt->password, DRIVER_WIFI_LEN_PWD_MAX);
 
+                // Send Notification
+                dq_i.data = DRIVER_WIFI_NOTIFICATION_SMARTCONFIG_GOT_CREDENTIALS;
+                s_notify(&dq_i, 0);
                 break;
             
             case SC_EVENT_SEND_ACK_DONE:
-                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Event - SC_EVENT_SEND_ACK_DONE");
+                ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "SC_EVENT_SEND_ACK_DONE");
                 
                 // Stop SmartConfig
                 esp_smartconfig_stop();
