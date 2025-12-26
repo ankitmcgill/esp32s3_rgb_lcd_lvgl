@@ -1,1 +1,3 @@
 src/projects/*/build/
+
+src/projects/test_wifi/.cache/clangd/index/

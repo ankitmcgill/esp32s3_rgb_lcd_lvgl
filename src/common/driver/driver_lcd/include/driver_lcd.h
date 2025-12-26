@@ -15,7 +15,7 @@
     lvgl_port_lock(portMAX_DELAY);  \
     x;                              \
     lvgl_port_unlock();
-
+*/
 bool DRIVER_LCD_Init(void);
 
 void DRIVER_LCD_Demo(void);

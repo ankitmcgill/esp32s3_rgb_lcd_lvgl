@@ -52,6 +52,8 @@ static void s_task_function(void *pvParameters)
 {
     // Task Function
 
+    DRIVER_LCD_Demo();
+
     while(true){
         vTaskDelay(pdMS_TO_TICKS(500));
     };

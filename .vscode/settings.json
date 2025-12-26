@@ -2,4 +2,9 @@
     "git.openRepositoryInParentFolders": "never",
     "workbench.tree.indent": 16,
     "editor.experimental.treeSitterTelemetry": true,
+    "files.associations": {
+        "*.h": "c",
+        "*.backup": "c"
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/clang",
 }

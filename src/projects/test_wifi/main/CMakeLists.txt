@@ -4,6 +4,7 @@ idf_component_register(SRCS "main.c"
                             driver_appinfo
                             driver_wifi
                             module_wifi
+                            util_dataqueue
                             defines
                             project_defines
                         PRIV_REQUIRES

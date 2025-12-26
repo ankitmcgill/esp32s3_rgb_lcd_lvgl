@@ -549,7 +549,7 @@
     "uiExportFolderPath": "/Volumes/external_hdd/dev/esp_idf_lvgl_example_1/src/projects/test_lcd_squareline/squareline_project_test_lcd/export/ui",
     "projectExportFolderPath": "/Volumes/external_hdd/dev/esp_idf_lvgl_example_1/src/projects/test_lcd_squareline/squareline_project_test_lcd/export/project",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 226,
+    "backup_cnt": 1218,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "9.2.2",

@@ -2156,11 +2156,6 @@ CONFIG_ESP_PANEL_BOARD_DEFAULT_USE_NONE=y
 # end of ESP Display Panel Configurations
 
 #
-# ESP LVGL PORT
-#
-# end of ESP LVGL PORT
-
-#
 # LVGL configuration
 #
 CONFIG_LV_CONF_SKIP=y
