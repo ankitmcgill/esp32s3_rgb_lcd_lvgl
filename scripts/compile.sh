@@ -23,7 +23,7 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source $SCRIPT_DIR/colors.sh
 
 # List Of Valid Arguments
-VALID=("build" "flash" "monitor" "clean" "fullclean" "set-target" "size")
+VALID=("build" "flash" "monitor" "clean" "fullclean" "set-target" "size" "erase-flash")
 
 for arg in "$@"; do
     found=false
