@@ -6,4 +6,5 @@
         "*.h": "c",
         "*.backup": "c"
     },
+    "C_Cpp.default.compilerPath": "/usr/bin/clang",
 }

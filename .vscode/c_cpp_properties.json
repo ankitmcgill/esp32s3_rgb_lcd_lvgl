@@ -1,14 +1,6 @@
-
-// Workspace Settings To Resolve Esp-Idf Symbols And Defines
-// Configuration For Mac And Linux
-// To Switch Configurations : Command Palette (Ctrl+Shift+P) -> C/C++: Select A Configuration -> Choose Configuration
 {
     "configurations": [
-        // Mac Configuration
         {
-            // This Array Of Path Strings Is Primarily Used By The "Default" Intellisense Engine For Resolving Header
-            // Files Referenced By #Include Directives. These Paths Are Analogous To The Directories You Would Specify 
-            // To Your Compiler Using The -I Switch
             "name": "esp-idf-mac",
             "includePath": [
                 "${config:idf.espIdfPath}/components",
@@ -17,9 +9,6 @@
                 "${workspaceFolder}/src/common/**",
                 "${workspaceFolder}/src/projects/**"
             ],
-            // This Array Of Path Strings Is Used By The Tag Parser For Providing Semantic-Aware Intellisense Features
-            // Like Go To Definition, Peek Definition, And Symbol Searching. The C/C++ Extension Recursively Searches 
-            // The Directories Specified In Browse.Path To Build A Database Of Symbols And Their Locations
             "browse": {
                 "path": [
                     "${config:idf.espIdfPath}/components",
@@ -34,11 +23,7 @@
             "cStandard": "c17",
             "cppStandard": "gnu++17"
         },
-        // Linux Configuration
         {
-            // This Array Of Path Strings Is Primarily Used By The "Default" Intellisense Engine For Resolving Header
-            // Files Referenced By #Include Directives. These Paths Are Analogous To The Directories You Would Specify 
-            // To Your Compiler Using The -I Switch
             "name": "esp-idf-linux",
             "includePath": [
                 "${config:idf.espIdfPath}/components",
@@ -47,9 +32,6 @@
                 "${workspaceFolder}/src/common/**",
                 "${workspaceFolder}/src/projects/**"
             ],
-            // This Array Of Path Strings Is Used By The Tag Parser For Providing Semantic-Aware Intellisense Features
-            // Like Go To Definition, Peek Definition, And Symbol Searching. The C/C++ Extension Recursively Searches 
-            // The Directories Specified In Browse.Path To Build A Database Of Symbols And Their Locations
             "browse": {
                 "path": [
                     "${config:idf.espIdfPath}/components",
@@ -60,10 +42,10 @@
                 ]
             },
             "intelliSenseMode": "linux-gcc-x64",
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
             "cppStandard": "gnu++17"
-        },
+        }
     ],
     "version": 4
 }
