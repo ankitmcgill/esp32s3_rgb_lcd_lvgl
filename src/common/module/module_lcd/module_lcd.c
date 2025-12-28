@@ -6,7 +6,6 @@
 
 #include "module_lcd.h"
 #include "define_common_data_types.h"
-#include "define_rtos_globals.h"
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
 

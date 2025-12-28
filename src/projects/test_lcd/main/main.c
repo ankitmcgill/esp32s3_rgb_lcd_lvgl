@@ -14,7 +14,6 @@
 #include "driver_lcd.h"
 #include "driver_spiffs.h"
 #include "define_rtos_tasks.h"
-#include "define_rtos_globals.h"
 #include "project_ui.h"
 #include "project_defines.h"
 
