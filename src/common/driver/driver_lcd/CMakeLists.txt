@@ -10,4 +10,5 @@ idf_component_register(SRCS
                             defines
                             bsp
                        REQUIRES
+                            util_dataqueue
 )

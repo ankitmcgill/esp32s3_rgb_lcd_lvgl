@@ -19,6 +19,7 @@
 #include "lv_demos.h"
 
 #include "driver_lcd.h"
+#include "util_dataqueue.h"
 #include "define_common_data_types.h"
 #include "define_rtos_tasks.h"
 #include "bsp.h"
@@ -28,6 +29,7 @@
 // Local Variables
 static TaskHandle_t s_handle_task_lvgl;
 static rtos_component_type_t s_component_type;
+static util_dataqueue_t s_dataqueue;
 static esp_lcd_panel_handle_t s_handle_lcd_panel;
 static SemaphoreHandle_t s_handle_semaphore_vsync;
 static esp_timer_handle_t s_timer;
@@ -54,6 +56,10 @@ bool DRIVER_LCD_Init(void)
     s_handle_semaphore_vsync = xSemaphoreCreateBinary();
     assert(s_handle_semaphore_vsync);
 
+    // Create Data Queue
+    UTIL_DATAQUEUE_Create(&s_dataqueue, DRIVER_LCD_DATAQUEUE_MAX);
+    assert(s_dataqueue.handle);
+
     // Initialize Display Subsystems
     if(!s_lcd_panel_setup()) goto err;
     if(!s_lvgl_setup()) goto err;
@@ -63,19 +69,11 @@ bool DRIVER_LCD_Init(void)
         return false;
 }
 
-void DRIVER_LCD_Demo(void)
+bool DRIVER_LCD_AddCommand(util_dataqueue_item_t* dq_i)
 {
-    // Lvgl Demo
-    // For This To Work The Following Should Be Enabed Through Menuconfig
-    // 1. Component Config -> LVGL Configuration -> Demos -> Build Demos
-    // 1. Component Config -> LVGL Configuration -> Demos -> Benchmark Your System
-    // 1. Component Config -> LVGL Configuration -> Others -> Enable System Monitor Component
-    // 1. Component Config -> LVGL Configuration -> Others -> Show CPU Usage And Fps Count
+    // Add Command
 
-    #if defined CONFIG_LV_BUILD_DEMOS && defined CONFIG_LV_USE_SYSMON && defined CONFIG_LV_USE_PERF_MONITOR
-        ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lvgl Demo", s_component_type);
-        lv_demo_benchmark();
-    #endif
+    return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
 }
 
 static bool s_lcd_panel_setup(void)
@@ -231,9 +229,42 @@ static void s_task_lvgl(void *arg)
 {
     // LvgL Task
 
+    util_dataqueue_item_t dq_i;
+
     ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Starting LVGL task");
 
-    while(true) {
+    while(true){
+        if(UTIL_DATAQUEUE_MessageCheck(&s_dataqueue))
+        {
+            if(UTIL_DATAQUEUE_MessageGet(&s_dataqueue, &dq_i, 0))
+            {
+                ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "New In DataQueue. Type %u, Data %u", dq_i.data_type, dq_i.data);
+
+                if(dq_i.data_type == DATA_TYPE_COMMAND)
+                {
+                    switch(dq_i.data)
+                    {
+                        case DRIVER_LCD_COMMAND_DEMO:
+                            // Lvgl Demo
+                            // For This To Work The Following Should Be Enabed Through Menuconfig
+                            // 1. Component Config -> LVGL Configuration -> Demos -> Build Demos
+                            // 1. Component Config -> LVGL Configuration -> Demos -> Benchmark Your System
+                            // 1. Component Config -> LVGL Configuration -> Others -> Enable System Monitor Component
+                            // 1. Component Config -> LVGL Configuration -> Others -> Show CPU Usage And Fps Count
+
+                            #if defined CONFIG_LV_BUILD_DEMOS && defined CONFIG_LV_USE_SYSMON && defined CONFIG_LV_USE_PERF_MONITOR
+                                ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lvgl Demo", s_component_type);
+                                lv_demo_benchmark();
+                            #endif
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
         lv_timer_handler();
         vTaskDelay(pdMS_TO_TICKS(DRIVER_LCD_LVGL_TASK_PERIOD_MS));
     }
@@ -284,14 +315,14 @@ static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *
     if (xSemaphoreTake(s_handle_semaphore_vsync, pdMS_TO_TICKS(20)) != pdTRUE) {
         ESP_LOGW(DEBUG_TAG_DRIVER_LCD, "VSYNC timeout");
     }
-    // ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(s_handle_lcd_panel,
-    //     area->x1,
-    //     area->y1,
-    //     area->x2 + 1,
-    //     area->y2 + 1,
-    //     px_map
-    // ));
-    esp_lcd_rgb_panel_swap_buffers(s_handle_lcd_panel);
+    ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(s_handle_lcd_panel,
+        area->x1,
+        area->y1,
+        area->x2 + 1,
+        area->y2 + 1,
+        px_map
+    ));
+    // esp_lcd_rgb_panel_swap_buffers(s_handle_lcd_panel);
 
     lv_display_flush_ready(disp);
 }

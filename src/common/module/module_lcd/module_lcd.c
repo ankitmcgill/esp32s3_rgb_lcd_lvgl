@@ -5,6 +5,8 @@
 #include "freertos/task.h"
 
 #include "module_lcd.h"
+#include "driver_lcd.h"
+#include "util_dataqueue.h"
 #include "define_common_data_types.h"
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
@@ -40,11 +42,20 @@ bool MODULE_LCD_Init(void)
     return true;
 }
 
+bool MODULE_LCD_Demo(void)
+{
+    // Lcd Demo
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_DEMO
+    };
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
 static void s_task_function(void *pvParameters)
 {
     // Task Function
-
-    DRIVER_LCD_Demo();
 
     while(true){
         vTaskDelay(pdMS_TO_TICKS(500));

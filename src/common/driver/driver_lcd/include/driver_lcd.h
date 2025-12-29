@@ -9,20 +9,22 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#include "util_dataqueue.h"
+
 #define DRIVER_LCD_LVGL_TICK_PERIOD_MS      (1)
 #define DRIVER_LCD_LVGL_TASK_PERIOD_MS      (10)
 
 #define DRIVER_LCD_DISPLAY_RESOLUTION_X     (800)
 #define DRIVER_LCD_DISPLAY_RESOLUTION_Y     (480)
 
-/*
-#define DRIVER_LCD_LVGL_UPDATE(x)   \
-    lvgl_port_lock(portMAX_DELAY);  \
-    x;                              \
-    lvgl_port_unlock();
-*/
+#define DRIVER_LCD_DATAQUEUE_MAX            (2)
+
+typedef enum {
+    DRIVER_LCD_COMMAND_DEMO = 0,
+}driver_lcd_command_type_t;
+
 bool DRIVER_LCD_Init(void);
 
-void DRIVER_LCD_Demo(void);
+bool DRIVER_LCD_AddCommand(util_dataqueue_item_t* dq_i);
 
 #endif
