@@ -30,18 +30,19 @@
 static TaskHandle_t s_handle_task_lvgl;
 static rtos_component_type_t s_component_type;
 static util_dataqueue_t s_dataqueue;
-static esp_lcd_panel_handle_t s_handle_lcd_panel;
+static esp_lcd_panel_handle_t s_handle_rgb_panel;
 static SemaphoreHandle_t s_handle_semaphore_vsync;
+static SemaphoreHandle_t s_handle_semaphore_guiready;
 static esp_timer_handle_t s_timer;
-static _lock_t s_lvgl_api_lock;
+static lv_display_t* s_lvgl_display;
 
 // Local Functions
-static bool s_lcd_panel_setup(void);
+static bool s_lcd_rgb_panel_setup(void);
 static bool s_lvgl_setup(void);
 static void s_task_lvgl(void *arg);
 static void s_lvgl_tick_timer_cb(void* arg);
-static bool s_lcd_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data);
-static bool s_lcd_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx);
+static bool s_lcd_rgb_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data);
+static bool s_lcd_rgb_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx);
 static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map);
 
 // External Functions
@@ -55,13 +56,15 @@ bool DRIVER_LCD_Init(void)
 
     s_handle_semaphore_vsync = xSemaphoreCreateBinary();
     assert(s_handle_semaphore_vsync);
+    s_handle_semaphore_guiready = xSemaphoreCreateBinary();
+    assert(s_handle_semaphore_guiready);
 
     // Create Data Queue
     UTIL_DATAQUEUE_Create(&s_dataqueue, DRIVER_LCD_DATAQUEUE_MAX);
     assert(s_dataqueue.handle);
 
     // Initialize Display Subsystems
-    if(!s_lcd_panel_setup()) goto err;
+    if(!s_lcd_rgb_panel_setup()) goto err;
     if(!s_lvgl_setup()) goto err;
 
     return true;
@@ -76,15 +79,15 @@ bool DRIVER_LCD_AddCommand(util_dataqueue_item_t* dq_i)
     return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
 }
 
-static bool s_lcd_panel_setup(void)
+static bool s_lcd_rgb_panel_setup(void)
 {
     // Initialize & Setup Esp Lcd Panel
 
     esp_err_t ret = ESP_OK;
-    s_handle_lcd_panel = NULL;
+    s_handle_rgb_panel = NULL;
     const esp_lcd_rgb_panel_event_callbacks_t cbs = {
-        .on_color_trans_done = s_lcd_panel_color_trans_cb,
-        .on_vsync = s_lcd_panel_vsync_cb
+        .on_color_trans_done = s_lcd_rgb_panel_color_trans_cb,
+        .on_vsync = s_lcd_rgb_panel_vsync_cb
     };
     esp_lcd_rgb_panel_config_t rgb_panel_config = {
         .clk_src = LCD_CLK_SRC_PLL160M,
@@ -92,7 +95,7 @@ static bool s_lcd_panel_setup(void)
         .bits_per_pixel = 16,
         .num_fbs = 2,
         .psram_trans_align = 64,
-        .bounce_buffer_size_px = 0,
+        .bounce_buffer_size_px = 10 * DRIVER_LCD_DISPLAY_RESOLUTION_X,
         .flags.fb_in_psram = true,
         .timings = {
             .pclk_hz = (21 * 1000 * 1000),
@@ -131,32 +134,33 @@ static bool s_lcd_panel_setup(void)
         }
     };
 
+    (void)ret;
     // Create Esp Lcd Panel
-    ESP_GOTO_ON_ERROR(esp_lcd_new_rgb_panel(&rgb_panel_config, &s_handle_lcd_panel),
+    ESP_GOTO_ON_ERROR(esp_lcd_new_rgb_panel(&rgb_panel_config, &s_handle_rgb_panel),
         err,
         DEBUG_TAG_DRIVER_LCD,
         "Esp_lcd Panel Create Fail"
     );
 
+    // Register Panel Event Callbacks
+    ESP_GOTO_ON_ERROR(esp_lcd_rgb_panel_register_event_callbacks(s_handle_rgb_panel, &cbs, (void*)s_lvgl_display),
+        err,
+        DEBUG_TAG_DRIVER_LCD,
+        "ESP_lcd Panel Cb Register Fail"
+    );
+
     // Reset Panel
-    ESP_GOTO_ON_ERROR(esp_lcd_panel_reset(s_handle_lcd_panel),
+    ESP_GOTO_ON_ERROR(esp_lcd_panel_reset(s_handle_rgb_panel),
         err,
         DEBUG_TAG_DRIVER_LCD,
         "Esp_lcd Panel Reset Fail"
     );
 
     // Init Panel
-    ESP_GOTO_ON_ERROR(esp_lcd_panel_init(s_handle_lcd_panel),
+    ESP_GOTO_ON_ERROR(esp_lcd_panel_init(s_handle_rgb_panel),
         err,
         DEBUG_TAG_DRIVER_LCD,
         "Esp_lcd Panel Init Fail"
-    );
-
-    // Register Panel Event Callbacks
-    ESP_GOTO_ON_ERROR(esp_lcd_rgb_panel_register_event_callbacks(s_handle_lcd_panel, &cbs, NULL),
-        err,
-        DEBUG_TAG_DRIVER_LCD,
-        "ESP_lcd Panel Cb Register Fail"
     );
 
     ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lcd Panel Setup Done");
@@ -171,35 +175,31 @@ static bool s_lvgl_setup(void)
     // Initialize & Setup Lvgl
 
     esp_err_t ret = ESP_OK;
-    lv_color16_t* buf1 = NULL;
-    lv_color16_t* buf2 = NULL;
+    void* buf1 = NULL;
+    void* buf2 = NULL;
     size_t buf_size = (DRIVER_LCD_DISPLAY_RESOLUTION_X * DRIVER_LCD_DISPLAY_RESOLUTION_Y * sizeof(lv_color16_t));
+
+    (void)ret;
 
     // Initialize Lvgl
     lv_init();
 
-    // Allocate Buffers
-    buf1 = heap_caps_malloc(buf_size, MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    buf2 = heap_caps_malloc(buf_size, MALLOC_CAP_DMA | MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    // Allocate Buffers - Use Esp Lcd Rgb Panel Buffers
+    ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Using Esp Lcd Rgb Panel fb");
+    ESP_ERROR_CHECK(esp_lcd_rgb_panel_get_frame_buffer(s_handle_rgb_panel, 2, &buf1, &buf2));
     assert(buf1 && buf2);
 
-    ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lvgl buf0 buf1 Allocated");
-
     // Create An Lvgl Display & Initialize Buffers
-    lv_display_t *lvgl_display = lv_display_create(DRIVER_LCD_DISPLAY_RESOLUTION_X, DRIVER_LCD_DISPLAY_RESOLUTION_Y);
-    lv_display_set_buffers(lvgl_display, buf1, buf2, buf_size, LV_DISPLAY_RENDER_MODE_FULL);
-    assert(lvgl_display);
-
-    /* REQUIRED for RGB */
-    lv_display_set_render_mode(lvgl_display, LV_DISPLAY_RENDER_MODE_DIRECT | LV_DISPLAY_RENDER_MODE_FULL);
-    // lv_display_set_full_refresh(lvgl_display, true);
+    s_lvgl_display = lv_display_create(DRIVER_LCD_DISPLAY_RESOLUTION_X, DRIVER_LCD_DISPLAY_RESOLUTION_Y);
+    lv_display_set_buffers(s_lvgl_display, buf1, buf2, buf_size, LV_DISPLAY_RENDER_MODE_FULL);
+    assert(s_lvgl_display);
 
     // Set Color Depth
     // Set Display Rotation
     // Set Cb Function That Copies Rendered Image To Display Area
-    lv_display_set_color_format(lvgl_display, LV_COLOR_FORMAT_RGB565);
-    lv_display_set_rotation(lvgl_display, LV_DISPLAY_ROTATION_180);
-    lv_display_set_flush_cb(lvgl_display, s_lvgl_flush_cb);
+    lv_display_set_color_format(s_lvgl_display, LV_COLOR_FORMAT_RGB565);
+    lv_display_set_rotation(s_lvgl_display, LV_DISPLAY_ROTATION_180);
+    lv_display_set_flush_cb(s_lvgl_display, s_lvgl_flush_cb);
 
     ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lvgl Display Created");
 
@@ -251,7 +251,6 @@ static void s_task_lvgl(void *arg)
                             // 1. Component Config -> LVGL Configuration -> Demos -> Benchmark Your System
                             // 1. Component Config -> LVGL Configuration -> Others -> Enable System Monitor Component
                             // 1. Component Config -> LVGL Configuration -> Others -> Show CPU Usage And Fps Count
-
                             #if defined CONFIG_LV_BUILD_DEMOS && defined CONFIG_LV_USE_SYSMON && defined CONFIG_LV_USE_PERF_MONITOR
                                 ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lvgl Demo", s_component_type);
                                 lv_demo_benchmark();
@@ -278,7 +277,7 @@ static void s_lvgl_tick_timer_cb(void* arg)
     lv_tick_inc(DRIVER_LCD_LVGL_TICK_PERIOD_MS);
 }
 
-static bool s_lcd_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data)
+static bool s_lcd_rgb_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data)
 {
     // Esp_lcd Panel Vsync Cb
 
@@ -286,21 +285,22 @@ static bool s_lcd_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb
     BaseType_t high_task_awoken = pdFALSE;
 
     // Wait Till Lvgl Has Finished
-        xSemaphoreGiveFromISR( s_handle_semaphore_vsync , &high_task_awoken);
+    // if(xSemaphoreTakeFromISR(s_handle_semaphore_guiready, &high_task_awoken) == pdTRUE){
+        xSemaphoreGiveFromISR(s_handle_semaphore_vsync, &high_task_awoken);
+    // }
 
     return (high_task_awoken == pdTRUE);
 }
 
-static bool s_lcd_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
+static bool s_lcd_rgb_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
 {
     // Esp_lcd Panel Color Trans Done Cb
+    // Tell Lvgl Ready To Swap Buffers
 
     // ESP_EARLY_LOGI(DEBUG_TAG_DRIVER_LCD, "color trans done cb");
 
     // Notify Lvgl Flush Ready
-
-    // lv_display_t *disp = (lv_display_t *)user_ctx;
-    // lv_display_flush_ready(disp);
+    // lv_display_flush_ready(s_lvgl_display);
 
     return false;
 }
@@ -310,19 +310,20 @@ static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *
     // Lvgl Flush Cb
     // Pass the Draw Buffer To The Driver
 
+    // Give Guiready semaphore
+    // xSemaphoreGive(s_handle_semaphore_guiready);
+
     // Wait For The VSync Event - With A Timeout
     // Forever Blocking Is Bad
-    if (xSemaphoreTake(s_handle_semaphore_vsync, pdMS_TO_TICKS(20)) != pdTRUE) {
+    if(xSemaphoreTake(s_handle_semaphore_vsync, pdMS_TO_TICKS(20)) != pdTRUE){
         ESP_LOGW(DEBUG_TAG_DRIVER_LCD, "VSYNC timeout");
     }
-    ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(s_handle_lcd_panel,
+    esp_lcd_panel_draw_bitmap(s_handle_rgb_panel,
         area->x1,
         area->y1,
         area->x2 + 1,
         area->y2 + 1,
         px_map
-    ));
-    // esp_lcd_rgb_panel_swap_buffers(s_handle_lcd_panel);
-
+    );
     lv_display_flush_ready(disp);
 }

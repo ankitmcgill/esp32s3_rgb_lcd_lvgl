@@ -11,7 +11,7 @@
 
 #include "util_dataqueue.h"
 
-#define DRIVER_LCD_LVGL_TICK_PERIOD_MS      (1)
+#define DRIVER_LCD_LVGL_TICK_PERIOD_MS      (2)
 #define DRIVER_LCD_LVGL_TASK_PERIOD_MS      (10)
 
 #define DRIVER_LCD_DISPLAY_RESOLUTION_X     (800)
