@@ -300,7 +300,7 @@ static bool s_lcd_rgb_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const e
     // ESP_EARLY_LOGI(DEBUG_TAG_DRIVER_LCD, "color trans done cb");
 
     // Notify Lvgl Flush Ready
-    // lv_display_flush_ready(s_lvgl_display);
+    lv_display_flush_ready(s_lvgl_display);
 
     return false;
 }
@@ -325,5 +325,5 @@ static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *
         area->y2 + 1,
         px_map
     );
-    lv_display_flush_ready(disp);
+    // lv_display_flush_ready(disp);
 }
