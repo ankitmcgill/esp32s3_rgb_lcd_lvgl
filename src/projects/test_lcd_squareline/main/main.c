@@ -14,7 +14,7 @@
 #include "driver_lcd.h"
 #include "driver_spiffs.h"
 #include "define_rtos_tasks.h"
-#include "define_rtos_globals.h"
+#include "project_ui.h"
 #include "project_defines.h"
 
 void app_main(void)
@@ -34,7 +34,7 @@ void app_main(void)
     esp_chip_info_t c_info;
     uint32_t size_flash;
     uint32_t size_ram;
-    uint8_t* buffer = (uint8_t*)malloc(256);
+    uint8_t* buffer = (uint8_t*)malloc(512);
 
     DRIVER_CHIPINFO_GetChipInfo(&c_info);
     DRIVER_CHIPINFO_GetChipID(buffer);
@@ -75,23 +75,28 @@ void app_main(void)
     ESP_LOGI(DEBUG_TAG_MAIN, "");
 
     // Initialize Spiffs & Filsystem
-    memset((void*)buffer, 0, 256);
+    memset((void*)buffer, 0, 512);
     DRIVER_SPIFFS_Init();
     DRIVER_SPIFFS_PrintInfo();
     if(DRIVER_SPIFFS_ReadFile("/spiff/hw_info.txt", (char*)buffer)){
         ESP_LOGI(DEBUG_TAG_MAIN, "%s", (char*)buffer);
     }else{
-        ESP_LOGI(DEBUG_TAG_MAIN, "Hw Info Read Failed"));
+        ESP_LOGE(DEBUG_TAG_MAIN, "Hw Info Read Failed");
     }
+    free(buffer);
 
     // Intialize Drivers & Modules
     DRIVER_LCD_Init();
     MODULE_LCD_Init();
 
+    // Lcd Demo
+    MODULE_LCD_Demo();
+
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called
     
-    while(true){
+    while(true)
+    {
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 

@@ -5,15 +5,16 @@ idf_component_register(SRCS "main.c"
                             driver_lcd
                             driver_spiffs
                             module_lcd
+                            util_dataqueue
                             defines
+                            project_ui
                             project_defines
                         PRIV_REQUIRES
                             spi_flash
                             nvs_flash
                             log
                             freertos
-                        INCLUDE_DIRS ""
-)
+                        INCLUDE_DIRS "")
 
 # Generate Spiffs Partition Binary From "spiffs_fs" folder And Flash To Controller
 spiffs_create_partition_image(spiff 

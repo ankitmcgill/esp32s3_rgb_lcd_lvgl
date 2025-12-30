@@ -34,20 +34,17 @@ set(EXTRA_COMPONENT_DIRS
     # Module Code
     "../../common/module/"
 
+    # Util Code
+    "../../common/util/"
+
     # Others
     "../../common/others/"
 
-    # Project UI
-    "./project_ui/"
-
     # Project Defines
     "./project_defines/"
-    
-    # Managed Components (Components Auto Downloaded From ESP-REGISTRY By idf_components.yml Dependency File)
-    # "../../common/managed_components/"
 
-    # Squareline Export UI 
-    "./squareline_project_test_lcd/export/ui"
+    # Project UI
+    "./project_ui/"
 )
 
 # Project Version
@@ -55,4 +52,4 @@ set(PROJECT_VER "0.1")
 
 # "Trim" the build. Include the minimal set of components, main, and anything it depends on.
 idf_build_set_property(MINIMAL_BUILD ON)
-project(Test_Lcd_Squareline)
+project(Test_Lcd)
