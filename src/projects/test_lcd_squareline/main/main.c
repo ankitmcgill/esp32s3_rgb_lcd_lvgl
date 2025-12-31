@@ -14,7 +14,7 @@
 #include "driver_lcd.h"
 #include "driver_spiffs.h"
 #include "define_rtos_tasks.h"
-#include "project_ui.h"
+#include "ui.h"
 #include "project_defines.h"
 
 void app_main(void)

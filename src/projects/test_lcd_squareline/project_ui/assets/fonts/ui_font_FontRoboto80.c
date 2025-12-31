@@ -4,7 +4,7 @@
  * Opts: --bpp 4 --size 80 --font /Volumes/external_hdd/dev/esp_idf_lvgl_example_1/src/projects/test_lcd_squareline/project_ui/assets/fonts/RobotoCondensed-VariableFont_wght.ttf -o /Volumes/external_hdd/dev/esp_idf_lvgl_example_1/src/projects/test_lcd_squareline/project_ui/assets/fonts/ui_font_FontRoboto80.c --format lvgl -r 0x2e-0x3a --no-compress --no-prefilter
  ******************************************************************************/
 
-#include "../ui.h"
+#include "ui.h"
 
 #ifndef UI_FONT_FONTROBOTO80
 #define UI_FONT_FONTROBOTO80 1

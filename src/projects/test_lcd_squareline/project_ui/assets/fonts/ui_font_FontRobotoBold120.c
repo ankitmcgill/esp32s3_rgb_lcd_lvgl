@@ -4,7 +4,7 @@
  * Opts: --bpp 4 --size 120 --font /Volumes/external_hdd/dev/esp_idf_lvgl_example_1/src/projects/test_lcd_squareline/project_ui/assets/fonts/Roboto-Bold.ttf -o /Volumes/external_hdd/dev/esp_idf_lvgl_example_1/src/projects/test_lcd_squareline/project_ui/assets/fonts/ui_font_FontRobotoBold120.c --format lvgl -r 0x30-0x3a --no-compress --no-prefilter
  ******************************************************************************/
 
-#include "../ui.h"
+#include "ui.h"
 
 #ifndef UI_FONT_FONTROBOTOBOLD120
 #define UI_FONT_FONTROBOTOBOLD120 1

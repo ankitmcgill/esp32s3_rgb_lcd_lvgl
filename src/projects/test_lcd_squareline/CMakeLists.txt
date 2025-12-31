@@ -44,7 +44,7 @@ set(EXTRA_COMPONENT_DIRS
     "./project_defines/"
 
     # Project UI
-    "./project_ui/"
+    "./project_ui/export/ui"
 )
 
 # Project Version
