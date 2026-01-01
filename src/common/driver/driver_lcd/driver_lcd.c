@@ -20,7 +20,6 @@
 
 #include "driver_lcd.h"
 #include "util_dataqueue.h"
-#include "ui.h"
 #include "define_common_data_types.h"
 #include "define_rtos_tasks.h"
 #include "bsp.h"
@@ -36,6 +35,7 @@ static SemaphoreHandle_t s_handle_semaphore_vsync;
 static SemaphoreHandle_t s_handle_semaphore_guiready;
 static esp_timer_handle_t s_timer;
 static lv_display_t* s_lvgl_display;
+static void (*s_ui_init_ptr)(void);
 
 // Local Functions
 static bool s_lcd_rgb_panel_setup(void);
@@ -52,6 +52,7 @@ bool DRIVER_LCD_Init(void)
     // Initialize Driver Lcd
 
     s_component_type = COMPONENT_TYPE_TASK;
+    s_ui_init_ptr = NULL;
 
     ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Type %u. Init", s_component_type);
 
@@ -71,6 +72,13 @@ bool DRIVER_LCD_Init(void)
     return true;
     err:
         return false;
+}
+
+void DRIVER_WIFI_SetUIInitFunction(void (*ptr)(void))
+{
+    // Set Function Pointer For UI Init Function
+
+    s_ui_init_ptr = ptr;
 }
 
 bool DRIVER_LCD_AddCommand(util_dataqueue_item_t* dq_i)
@@ -158,7 +166,7 @@ static bool s_lcd_rgb_panel_setup(void)
     );
 
     ESP_GOTO_ON_ERROR(
-        esp_lcd_panel_init(s_handle_lcd_panel),
+        esp_lcd_panel_init(s_handle_rgb_panel),
         err,
         DEBUG_TAG_DRIVER_LCD,
         "Esp_lcd Panel Reset Fail"
@@ -266,7 +274,7 @@ static void s_task_lvgl(void *arg)
                             break;
                         
                         case DRIVER_LCD_COMMAND_LOAD_UI:
-                            ui_init();
+                            (*s_ui_init_ptr)();
                             break;
                         
                         default:
