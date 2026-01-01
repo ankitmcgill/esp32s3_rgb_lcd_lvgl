@@ -9,19 +9,19 @@
 #include "cJSON.h"
 
 #include "driver_openweather.h"
-#include "util_dataqueue.h"
 #include "define_common_data_types.h"
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
 
+#define DRIVER_OPENWEATHER_API_URL_LEN_MAX      (128)
 #define DRIVER_OPENWEATHER_RESPONSE_LEN_MAX     (512)
 
 // Extern Variables
 
 // Local Variables
 static rtos_component_type_t s_component_type;
-static char* s_response;
 static char* s_api_url;
+static char* s_response;
 static uint16_t s_response_len;
 
 // Local Functions
@@ -34,11 +34,11 @@ bool DRIVER_OPENWEATHER_Init(void)
 
     s_component_type = COMPONENT_TYPE_NON_TASK;
 
-    // Allocate Buffers
+    // Allocate Buffers & Api Url
     s_response_len = 0;
     s_response = (char*)malloc(DRIVER_OPENWEATHER_RESPONSE_LEN_MAX);
     assert(s_response);
-    s_api_url = (char*)malloc(128);
+    s_api_url = (char*)malloc(DRIVER_OPENWEATHER_API_URL_LEN_MAX);
     assert(s_api_url);
     sprintf(s_api_url, 
         DRIVER_OPENWEATHER_API_URL_FORMAT,
@@ -81,7 +81,7 @@ bool DRIVER_OPENWEATHER_Get(void)
         goto cleanup;
     }
 
-    ESP_LOGI("HTTP", "Response: %s", s_response);
+    ESP_LOGI(DEBUG_TAG_DRIVER_OPENWEATHER, "Response: %s", s_response);
 
     // Response JSON Parsing
     cJSON *json = cJSON_Parse(s_response);
@@ -94,11 +94,11 @@ bool DRIVER_OPENWEATHER_Get(void)
     cJSON *value  = cJSON_GetObjectItem(json, "value");
 
     if (cJSON_IsString(status)) {
-        ESP_LOGI("JSON", "Status: %s", status->valuestring);
+        ESP_LOGI(DEBUG_TAG_DRIVER_OPENWEATHER, "Status: %s", status->valuestring);
     }
 
     if (cJSON_IsNumber(value)) {
-        ESP_LOGI("JSON", "Value: %d", value->valueint);
+        ESP_LOGI(DEBUG_TAG_DRIVER_OPENWEATHER, "Value: %d", value->valueint);
     }
 
     cJSON_Delete(json);
