@@ -35,8 +35,7 @@ void app_main(void)
     uint32_t size_flash;
     uint32_t size_ram;
 
-    DRIVER_CHIPINFO_GetChipInfo(&c_info);
-    DRIVER_CHIPINFO_GetChipID(buffer);
+
     size_flash = DRIVER_CHIPINFO_GetFlashSizeBytes();
     size_ram = DRIVER_CHIPINFO_GetRamSizeBytes();
 
@@ -55,6 +54,10 @@ void app_main(void)
     DRIVER_APPINFO_GetGitDetails((char*)buffer);
     ESP_LOGI(DEBUG_TAG_MAIN, "GIT DETAILS : %s", (char*)buffer);
     ESP_LOGI(DEBUG_TAG_MAIN, "-----------------------------------------------");
+
+    memset(buffer, 0, 50);
+    DRIVER_CHIPINFO_GetChipInfo(&c_info);
+    DRIVER_CHIPINFO_GetChipID(buffer);
 
     // Print Chip Information
     ESP_LOGI(DEBUG_TAG_MAIN, "-----------------------------------------------");

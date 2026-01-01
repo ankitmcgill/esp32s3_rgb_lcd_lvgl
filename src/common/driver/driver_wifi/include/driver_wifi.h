@@ -20,7 +20,7 @@
 #define DRIVER_WIFI_DATAQUEUE_MAX               (3)
 #define DRIVER_WIFI_NOTIFICATION_TARGET_MAX     (1)
 
-#define DRIVER_WIFI_HOSTNAME                    "ESP32-LVGL"
+#define DRIVER_WIFI_HOSTNAME_PREFIX             "ESP32-LVGL"
 
 typedef enum {
     DRIVER_WIFI_COMMAND_SCAN = 0,
