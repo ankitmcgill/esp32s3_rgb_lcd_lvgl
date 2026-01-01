@@ -24,11 +24,13 @@ extern "C" {
 extern lv_obj_t *ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
-LV_IMG_DECLARE( ui_img_images_bg_png);   // assets/images/bg.png
+LV_IMG_DECLARE( ui_img_images_img_clear_day_png);   // assets/images/img_clear_day.png
+LV_IMG_DECLARE( ui_img_images_location_png);   // assets/images/location.png
 
 // FONTS
-LV_FONT_DECLARE( ui_font_FontRoboto80);
-LV_FONT_DECLARE( ui_font_FontRobotoBold120);
+LV_FONT_DECLARE( ui_font_fontinter120);
+LV_FONT_DECLARE( ui_font_fontinter20);
+LV_FONT_DECLARE( ui_font_fontinter30);
 
 // UI INIT
 void ui_init(void);
