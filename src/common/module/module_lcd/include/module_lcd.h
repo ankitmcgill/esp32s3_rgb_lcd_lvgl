@@ -13,6 +13,6 @@
 
 bool MODULE_LCD_Init(void);
 
-void MODULE_LCD_Demo(void);
+bool MODULE_LCD_Demo(void);
 
 #endif

@@ -5,6 +5,7 @@ idf_component_register(SRCS "main.c"
                             driver_lcd
                             driver_spiffs
                             module_lcd
+                            util_dataqueue
                             defines
                             project_ui
                             project_defines

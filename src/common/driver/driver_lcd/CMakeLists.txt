@@ -6,7 +6,9 @@ idf_component_register(SRCS
                             esp_lcd
                             espressif__esp_lvgl_port
                             esp_common
+                            ui
                             defines
                             bsp
                        REQUIRES
+                            util_dataqueue
 )

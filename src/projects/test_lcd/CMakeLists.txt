@@ -34,6 +34,9 @@ set(EXTRA_COMPONENT_DIRS
     # Module Code
     "../../common/module/"
 
+    # Util Code
+    "../../common/util/"
+
     # Others
     "../../common/others/"
 

@@ -4,7 +4,7 @@
 #ifndef _PROJECT_DEFINES_
 #define _PROJECT_DEFINES_
 
-#define PROJECT_NAME            ("Test_Lcd")
+#define PROJECT_NAME            ("Test_Lcd_Squareline")
 
 #define DEBUG_TAG_MAIN          ("Main")
 

@@ -10,6 +10,7 @@
 #include "lwip/sys.h"
 
 #include "driver_wifi.h"
+#include "driver_chipinfo.h"
 #include "util_dataqueue.h"
 #include "define_common_data_types.h"
 #include "define_rtos_tasks.h"
@@ -41,6 +42,8 @@ bool DRIVER_WIFI_Init(void)
     // Initialize Driver Wifi
 
     esp_netif_t* sta_netif;
+    uint8_t wifi_mac[6];
+    char hostname[24];
 
     // Create Data Queue
     UTIL_DATAQUEUE_Create(&s_dataqueue, DRIVER_WIFI_DATAQUEUE_MAX);
@@ -62,7 +65,11 @@ bool DRIVER_WIFI_Init(void)
     sta_netif = esp_netif_create_default_wifi_sta();
 
     // Set Hostname
-    ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, DRIVER_WIFI_HOSTNAME));
+    DRIVER_CHIPINFO_GetChipID((uint8_t*)&wifi_mac);
+    sprintf(hostname, 
+        "%s-%02X%02X%02X", 
+        DRIVER_WIFI_HOSTNAME_PREFIX, wifi_mac[3], wifi_mac[4], wifi_mac[5]);
+    ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, hostname));
 
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
@@ -101,7 +108,7 @@ bool DRIVER_WIFI_Init(void)
         &handle_task_driver_wifi
     );
 
-    ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Type %u. Init", s_component_type);
+    ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Type %u. Init. Hostname %s", s_component_type, hostname);
 
     return true;
 }

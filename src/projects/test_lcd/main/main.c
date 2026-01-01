@@ -14,7 +14,6 @@
 #include "driver_lcd.h"
 #include "driver_spiffs.h"
 #include "define_rtos_tasks.h"
-#include "define_rtos_globals.h"
 #include "project_ui.h"
 #include "project_defines.h"
 
@@ -90,7 +89,7 @@ void app_main(void)
     DRIVER_LCD_Init();
     MODULE_LCD_Init();
 
-    // Initialize Project UI
+    // Lcd Demo
     MODULE_LCD_Demo();
 
     // Start Scheduler

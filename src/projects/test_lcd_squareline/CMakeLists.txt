@@ -34,20 +34,17 @@ set(EXTRA_COMPONENT_DIRS
     # Module Code
     "../../common/module/"
 
+    # Util Code
+    "../../common/util/"
+
     # Others
     "../../common/others/"
 
-    # Project UI
-    "./project_ui/"
-
     # Project Defines
     "./project_defines/"
-    
-    # Managed Components (Components Auto Downloaded From ESP-REGISTRY By idf_components.yml Dependency File)
-    # "../../common/managed_components/"
 
-    # Squareline Export UI 
-    "./squareline_project_test_lcd/export/ui"
+    # Project UI
+    "./project_ui/export/"
 )
 
 # Project Version
