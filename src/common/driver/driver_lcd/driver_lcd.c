@@ -1,12 +1,12 @@
 // DRIVER_LCD
 // SEPTEMBER 30, 2025
 
+#include <sys/lock.h>
+#include <sys/param.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
-
-#include <sys/lock.h>
-#include <sys/param.h>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_check.h"
@@ -20,6 +20,7 @@
 
 #include "driver_lcd.h"
 #include "util_dataqueue.h"
+#include "ui.h"
 #include "define_common_data_types.h"
 #include "define_rtos_tasks.h"
 #include "bsp.h"
@@ -95,12 +96,12 @@ static bool s_lcd_rgb_panel_setup(void)
         .bits_per_pixel = 16,
         .num_fbs = 2,
         .psram_trans_align = 64,
-        .bounce_buffer_size_px = 10 * DRIVER_LCD_DISPLAY_RESOLUTION_X,
+        .bounce_buffer_size_px = 10 * DRIVER_LCD_DISPLAY_HRES,
         .flags.fb_in_psram = true,
         .timings = {
             .pclk_hz = (21 * 1000 * 1000),
-            .h_res = DRIVER_LCD_DISPLAY_RESOLUTION_X,
-            .v_res = DRIVER_LCD_DISPLAY_RESOLUTION_Y,
+            .h_res = DRIVER_LCD_DISPLAY_HRES,
+            .v_res = DRIVER_LCD_DISPLAY_VRES,
             .hsync_pulse_width = 40,
             .hsync_back_porch = 40,
             .hsync_front_porch = 48,
@@ -177,7 +178,7 @@ static bool s_lvgl_setup(void)
     esp_err_t ret = ESP_OK;
     void* buf1 = NULL;
     void* buf2 = NULL;
-    size_t buf_size = (DRIVER_LCD_DISPLAY_RESOLUTION_X * DRIVER_LCD_DISPLAY_RESOLUTION_Y * sizeof(lv_color16_t));
+    size_t buf_size = (DRIVER_LCD_UI_HRES * DRIVER_LCD_UI_VRES * sizeof(lv_color16_t));
 
     (void)ret;
 
@@ -190,7 +191,7 @@ static bool s_lvgl_setup(void)
     assert(buf1 && buf2);
 
     // Create An Lvgl Display & Initialize Buffers
-    s_lvgl_display = lv_display_create(DRIVER_LCD_DISPLAY_RESOLUTION_X, DRIVER_LCD_DISPLAY_RESOLUTION_Y);
+    s_lvgl_display = lv_display_create(DRIVER_LCD_UI_HRES, DRIVER_LCD_UI_VRES);
     lv_display_set_buffers(s_lvgl_display, buf1, buf2, buf_size, LV_DISPLAY_RENDER_MODE_FULL);
     assert(s_lvgl_display);
 
@@ -256,7 +257,11 @@ static void s_task_lvgl(void *arg)
                                 lv_demo_benchmark();
                             #endif
                             break;
-
+                        
+                        case DRIVER_LCD_COMMAND_LOAD_UI:
+                            ui_init();
+                            break;
+                        
                         default:
                             break;
                     }
