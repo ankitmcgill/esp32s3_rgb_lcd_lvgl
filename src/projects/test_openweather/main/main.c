@@ -8,6 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "module_openweather.h"
 #include "driver_openweather.h"
 #include "driver_chipinfo.h"
 #include "driver_appinfo.h"
@@ -84,6 +85,7 @@ void app_main(void)
     free(buffer);
 
     DRIVER_OPENWEATHER_Init();
+    MODULE_OPENWEATHER_Init();
     
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called
