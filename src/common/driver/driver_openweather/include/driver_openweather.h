@@ -9,7 +9,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#define DRIVER_OPENWEATHER_API_URL_FORMAT   "http://api.openweathermap.org/data/2.5/weather?q=%s,%s&APPID=y%s"
+#define DRIVER_OPENWEATHER_API_URL_FORMAT   "http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric"
 #define DRIVER_OPENWEATHER_API_CITYNAME     "Bengaluru"
 #define DRIVER_OPENWEATHER_API_COUNTRYCODE  "IN"
 #define DRIVER_OPENWEATHER_API_APIKEY       "302f94ec7416e369eea2c09309bfa098"

@@ -9,7 +9,9 @@
 #include "freertos/task.h"
 
 #include "module_openweather.h"
+#include "module_wifi.h"
 #include "driver_openweather.h"
+#include "driver_wifi.h"
 #include "driver_chipinfo.h"
 #include "driver_appinfo.h"
 #include "driver_spiffs.h"
@@ -68,6 +70,11 @@ void app_main(void)
     ESP_LOGI(DEBUG_TAG_MAIN, "FLASH : %u MB", size_flash/(1024 * 1024));
     ESP_LOGI(DEBUG_TAG_MAIN, "-----------------------------------------------");
 
+    // Set Internal Module Logging
+    esp_log_level_set("wifi", ESP_LOG_NONE);
+    esp_log_level_set("esp_netif_handlers", ESP_LOG_NONE);
+    esp_log_level_set("wifi_init", ESP_LOG_NONE);
+    
     // Main Code Starts
     ESP_LOGI(DEBUG_TAG_MAIN, "");
     ESP_LOGI(DEBUG_TAG_MAIN, "Init");
@@ -85,7 +92,23 @@ void app_main(void)
     free(buffer);
 
     DRIVER_OPENWEATHER_Init();
+    DRIVER_WIFI_Init();
     MODULE_OPENWEATHER_Init();
+    MODULE_WIFI_Init();
+
+    // Connect To Wifi
+    util_dataqueue_item_t dq_i;
+    dq_i.data_type = DATA_TYPE_COMMAND;
+    dq_i.data = MODULE_WIFI_COMMAND_CONNECT;
+    MODULE_WIFI_AddCommand(&dq_i);
+
+    ESP_LOGI(DEBUG_TAG_MAIN, "Waiting for wifi to connect...");
+
+    // Delay for 10s to allow wifi to connect
+    vTaskDelay(pdMS_TO_TICKS(10000));
+
+    ESP_LOGI(DEBUG_TAG_MAIN, "Testing openweather code...");
+    DRIVER_OPENWEATHER_Get();
     
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called

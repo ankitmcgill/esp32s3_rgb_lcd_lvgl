@@ -4,7 +4,9 @@ idf_component_register(SRCS "main.c"
                             driver_appinfo
                             driver_spiffs
                             driver_openweather
+                            driver_wifi
                             module_openweather
+                            module_wifi
                             util_dataqueue
                             defines
                             project_defines

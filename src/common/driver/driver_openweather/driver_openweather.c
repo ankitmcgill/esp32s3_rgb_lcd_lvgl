@@ -14,7 +14,7 @@
 #include "project_defines.h"
 
 #define DRIVER_OPENWEATHER_API_URL_LEN_MAX      (128)
-#define DRIVER_OPENWEATHER_RESPONSE_LEN_MAX     (512)
+#define DRIVER_OPENWEATHER_RESPONSE_LEN_MAX     (544)
 
 // Extern Variables
 
@@ -43,7 +43,6 @@ bool DRIVER_OPENWEATHER_Init(void)
     sprintf(s_api_url, 
         DRIVER_OPENWEATHER_API_URL_FORMAT,
         DRIVER_OPENWEATHER_API_CITYNAME,
-        DRIVER_OPENWEATHER_API_COUNTRYCODE,
         DRIVER_OPENWEATHER_API_APIKEY
     );
 
@@ -53,6 +52,7 @@ bool DRIVER_OPENWEATHER_Init(void)
         DRIVER_OPENWEATHER_API_CITYNAME,
         DRIVER_OPENWEATHER_API_COUNTRYCODE
     );
+    ESP_LOGI(DEBUG_TAG_DRIVER_OPENWEATHER, "Api Url : %s", s_api_url);
 
     return true;
 }
@@ -64,7 +64,7 @@ bool DRIVER_OPENWEATHER_Get(void)
     esp_err_t err;
     s_response_len = 0;
     memset(s_response, 0, DRIVER_OPENWEATHER_RESPONSE_LEN_MAX);
-
+    
     esp_http_client_config_t config = {
         .url = s_api_url,
         .method = HTTP_METHOD_GET,

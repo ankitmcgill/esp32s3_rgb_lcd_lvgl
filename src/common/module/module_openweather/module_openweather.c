@@ -45,7 +45,7 @@ bool MODULE_OPENWEATHER_Init(void)
     return true;
 }
 
-bool MODULE_WIFI_AddCommand(util_dataqueue_item_t* dq_i)
+bool MODULE_OPENWEATHER_AddCommand(util_dataqueue_item_t* dq_i)
 {
     // Add Command
 
