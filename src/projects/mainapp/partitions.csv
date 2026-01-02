@@ -1,0 +1,8 @@
+# ESP32 Partition Table
+# https://thelastoutpostworkshop.github.io/microcontroller_devkit/esp32partitionbuilder/
+
+# Name,   Type, SubType, Offset,  Size, Flags
+nvs,data,nvs,0x9000,0x6000,
+phy,data,phy,0xF000,0x1000,
+factory,app,factory,0x10000,0xEF0000,
+spiff,data,spiffs,0xF00000,0x100000,

@@ -28,14 +28,23 @@ execute_process(
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}" -DGIT_HASH="${GIT_HASH}" -DGIT_TAG="${GIT_TAG}")
 
 set(EXTRA_COMPONENT_DIRS
-    # System Defines
-    "./defines/"
-
     # Driver Code
     "../../common/driver/"
 
     # Module Code
     "../../common/module/"
+
+    # Util Code
+    "../../common/util/"
+
+    # Others
+    "../../common/others/"
+
+    # Project Defines
+    "./project_defines/"
+
+    # Project UI
+    "./project_ui/export/"
 )
 
 # Project Version
@@ -43,4 +52,4 @@ set(PROJECT_VER "0.1")
 
 # "Trim" the build. Include the minimal set of components, main, and anything it depends on.
 idf_build_set_property(MINIMAL_BUILD ON)
-project(Mainapp)
+project(Test_Lcd_Squareline)
