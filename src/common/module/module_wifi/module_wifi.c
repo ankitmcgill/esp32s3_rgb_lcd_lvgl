@@ -46,13 +46,15 @@ bool MODULE_WIFI_Init(void)
     s_notification_targets_count = 0;
 
     // Create Task
-    xTaskCreate(
+    // Pinned to Core 0
+    xTaskCreatePinnedToCore(
         s_task_function,
         "t-m-wifi",
         TASK_STACK_DEPTH_MODULE_WIFI,
         NULL,
         TASK_PRIORITY_MODULE_WIFI,
-        &handle_task_module_wifi
+        &handle_task_module_wifi,
+        0
     );
 
     // Setup Wifi Connect Timer

@@ -13,7 +13,7 @@
 #define TASK_PRIORITY_MODULE_WIFI           (2)
 #define TASK_PRIORITY_MODULE_LCD            (2)
 #define TASK_PRIORITY_MODULE_API            (2)
-#define TASK_PRIORITY_LVGL                  (4)
+#define TASK_PRIORITY_LVGL                  (5)
 
 // Task Stack Depth
 #define TASK_STACK_DEPTH_DRIVER_WIFI        (4096)

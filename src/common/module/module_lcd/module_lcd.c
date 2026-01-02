@@ -28,13 +28,15 @@ bool MODULE_LCD_Init(void)
     s_component_type = COMPONENT_TYPE_TASK;
 
     // Create Task
-    xTaskCreate(
+    // Pinned to Core 0
+    xTaskCreatePinnedToCore(
         s_task_function,
         "t-m-lcd",
         TASK_STACK_DEPTH_MODULE_LCD,
         NULL,
         TASK_PRIORITY_MODULE_LCD,
-        &s_task_handle
+        &s_task_handle,
+        0
     );
 
     ESP_LOGI(DEBUG_TAG_MODULE_LCD, "Type %u. Init", s_component_type);

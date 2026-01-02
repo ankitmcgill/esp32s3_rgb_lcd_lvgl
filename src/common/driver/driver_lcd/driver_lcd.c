@@ -228,13 +228,15 @@ static bool s_lvgl_setup(void)
     ESP_ERROR_CHECK(esp_timer_start_periodic(s_timer, DRIVER_LCD_LVGL_TICK_PERIOD_MS * 1000));
 
     // Create Lvgl Task
-    xTaskCreate(
+    // Pinned to Core 1
+    xTaskCreatePinnedToCore(
         s_task_lvgl,
         "t-lvgl",
         TASK_STACK_DEPTH_LVGL,
         NULL,
         TASK_PRIORITY_LVGL,
-        &s_handle_task_lvgl
+        &s_handle_task_lvgl,
+        1
     );
 
     ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Lvgl Task Created");
