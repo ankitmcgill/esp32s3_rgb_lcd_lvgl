@@ -42,6 +42,24 @@ bool MODULE_LCD_Init(void)
     return true;
 }
 
+void MODULE_LCD_SetUIFunction(void (*ptr)(void))
+{
+    // Set UI Init Function
+
+    DRIVER_LCD_SetUIFunction(ptr);
+}
+
+bool MODULE_LCD_StartUI(void)
+{
+    // Start UI
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_LOAD_UI
+    };
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
 bool MODULE_LCD_Demo(void)
 {
     // Lcd Demo

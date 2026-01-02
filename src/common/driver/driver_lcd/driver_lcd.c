@@ -74,7 +74,7 @@ bool DRIVER_LCD_Init(void)
         return false;
 }
 
-void DRIVER_WIFI_SetUIInitFunction(void (*ptr)(void))
+void DRIVER_LCD_SetUIFunction(void (*ptr)(void))
 {
     // Set Function Pointer For UI Init Function
 
