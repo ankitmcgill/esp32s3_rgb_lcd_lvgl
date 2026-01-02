@@ -16,6 +16,9 @@
 #define DRIVER_API_WEATHER_APIKEY       "302f94ec7416e369eea2c09309bfa098"
 
 // Time Api - Timezonedb (https://timezonedb.com/)
+#define DRIVER_API_TIME_URL_FORMAT  "http://api.timezonedb.com/v2.1/get-time-zone?key=%s&format=json&by=zone&zone=%s"
+#define DRIVER_API_TIME_ZONE        "Asia/Kolkata"
+#define DRIVER_API_TIME_APIKEY      "EQ26WOQQQD91"
 
 typedef struct{
     uint16_t weather_id;
@@ -29,11 +32,15 @@ typedef struct{
 }driver_api_weather_info_t;
 
 typedef struct{
-
+    uint32_t timestamp;
+    char time_string[16];
+    char am_pm_string[3];
+    char date_string[48];
 }driver_api_time_info_t;
 
 bool DRIVER_API_Init(void);
 
 bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info);
+bool DRIVER_API_GetTime(driver_api_time_info_t* t_info);
 
 #endif

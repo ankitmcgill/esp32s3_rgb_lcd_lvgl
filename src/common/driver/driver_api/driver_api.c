@@ -25,6 +25,7 @@ static char* s_response;
 static uint16_t s_response_len;
 
 // Local Functions
+static void s_ts_to_time_strings(uint32_t ts, driver_api_time_info_t* t_info);
 static esp_err_t s_http_event_handler(esp_http_client_event_t *evt);
 
 // External Functions
@@ -34,17 +35,11 @@ bool DRIVER_API_Init(void)
 
     s_component_type = COMPONENT_TYPE_NON_TASK;
 
-    // Allocate Buffers & Api Url
-    s_response_len = 0;
+    // Allocate API Url & Response Buffers
     s_response = (char*)malloc(DRIVER_API_RESPONSE_LEN_MAX);
     assert(s_response);
     s_api_url = (char*)malloc(DRIVER_API_API_URL_LEN_MAX);
     assert(s_api_url);
-    sprintf(s_api_url, 
-        DRIVER_API_WEATHER_URL_FORMAT,
-        DRIVER_API_WEATHER_CITYNAME,
-        DRIVER_API_WEATHER_APIKEY
-    );
 
     ESP_LOGI(DEBUG_TAG_DRIVER_API, "Type %u. Init", s_component_type);
     ESP_LOGI(DEBUG_TAG_DRIVER_API, 
@@ -59,9 +54,20 @@ bool DRIVER_API_Init(void)
 
 bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info)
 {
-    // Get Data
+    // Get Weather Data
 
     esp_err_t err;
+
+    // Generate API Call Message
+    // Allocate Buffers & Api Url
+    s_response_len = 0;
+    memset(s_response, 0, DRIVER_API_RESPONSE_LEN_MAX);
+    sprintf(s_api_url, 
+        DRIVER_API_WEATHER_URL_FORMAT,
+        DRIVER_API_WEATHER_CITYNAME,
+        DRIVER_API_WEATHER_APIKEY
+    );
+
     esp_http_client_config_t config = {
         .url = s_api_url,
         .method = HTTP_METHOD_GET,
@@ -69,9 +75,8 @@ bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info)
         .timeout_ms = 5000,
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
-    s_response_len = 0;
-    memset(s_response, 0, DRIVER_API_RESPONSE_LEN_MAX);
 
+    ESP_LOGI(DEBUG_TAG_DRIVER_API, "Request: %s", s_api_url);
     ESP_LOGI(DEBUG_TAG_DRIVER_API, "Sending GET request");
 
     err = esp_http_client_perform(client);
@@ -80,10 +85,9 @@ bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info)
         goto cleanup;
     }
 
-    ESP_LOGI(DEBUG_TAG_DRIVER_API, "Response: %s", s_response);
+    // ESP_LOGI(DEBUG_TAG_DRIVER_API, "Response: %s", s_response);
 
     // Response JSON Parsing
-    // Weather
     cJSON* root = cJSON_Parse(s_response);
     if(!root){
         ESP_LOGE(DEBUG_TAG_DRIVER_API, "Invalid JSON");
@@ -154,18 +158,116 @@ bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info)
         return false;
 }
 
+bool DRIVER_API_GetTime(driver_api_time_info_t* t_info)
+{
+    // Get Time Data
+
+    esp_err_t err;
+
+    s_response_len = 0;
+    memset(s_response, 0, DRIVER_API_RESPONSE_LEN_MAX);
+    sprintf(s_api_url, 
+        DRIVER_API_TIME_URL_FORMAT,
+        DRIVER_API_TIME_APIKEY,
+        DRIVER_API_TIME_ZONE
+    );
+
+    esp_http_client_config_t config = {
+        .url = s_api_url,
+        .method = HTTP_METHOD_GET,
+        .event_handler = s_http_event_handler,
+        .timeout_ms = 5000,
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    ESP_LOGI(DEBUG_TAG_DRIVER_API, "Request: %s", s_api_url);
+    ESP_LOGI(DEBUG_TAG_DRIVER_API, "Sending GET request");
+
+    err = esp_http_client_perform(client);
+    if(err != ESP_OK){
+        ESP_LOGE(DEBUG_TAG_DRIVER_API, "Request failed: %s", esp_err_to_name(err));
+        goto cleanup;
+    }
+
+    // ESP_LOGI(DEBUG_TAG_DRIVER_API, "Response: %s", s_response);
+
+    // Response JSON Parsing
+    cJSON* root = cJSON_Parse(s_response);
+    if(!root){
+        ESP_LOGE(DEBUG_TAG_DRIVER_API, "Invalid JSON");
+        goto cleanup;
+    }
+
+    // Timestamp
+    cJSON* ts = cJSON_GetObjectItem(root, "timestamp");
+    if(cJSON_IsNumber(ts)){
+        ESP_LOGI(DEBUG_TAG_DRIVER_API, "timestamp: %ld", (long)ts->valueint);
+        
+        t_info->timestamp = (long)ts->valueint;
+        s_ts_to_time_strings(ts->valueint, t_info);
+
+        ESP_LOGI(DEBUG_TAG_DRIVER_API, "Time String: %s", t_info->time_string);
+        ESP_LOGI(DEBUG_TAG_DRIVER_API, "AM_PM String: %s", t_info->am_pm_string);
+        ESP_LOGI(DEBUG_TAG_DRIVER_API, "Date String: %s", t_info->date_string);
+    }
+
+    cJSON_Delete(root);
+    esp_http_client_cleanup(client);
+    return true;
+
+    cleanup:
+        esp_http_client_cleanup(client);
+        ESP_LOGI(DEBUG_TAG_DRIVER_API, "HTTP task finished");
+        return false;
+}
+
+static void s_ts_to_time_strings(uint32_t ts, driver_api_time_info_t* t_info)
+{
+    // Convert Unix Timestamp To Time Components
+
+    time_t rawtime = (time_t)ts;
+    struct tm timeinfo;
+    char wday[7][16] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    char month[12][16] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+
+    gmtime_r(&rawtime, &timeinfo);
+    memset(t_info->time_string, 0, 16);
+    memset(t_info->am_pm_string, 0, 3);
+    memset(t_info->date_string, 0, 48);
+    t_info->timestamp = ts;
+    if(timeinfo.tm_hour > 12){
+        timeinfo.tm_hour -= 12;
+        sprintf(t_info->am_pm_string, "PM");
+    }else{
+        sprintf(t_info->am_pm_string, "AM");
+    }
+    sprintf(t_info->time_string, "%u:%u", timeinfo.tm_hour, timeinfo.tm_min);    
+    sprintf(t_info->date_string, 
+                "%s %u %s, %u", 
+                wday[timeinfo.tm_wday],
+                timeinfo.tm_mday,
+                month[timeinfo.tm_mon],
+                timeinfo.tm_year + 1900
+    );
+}
+
 static esp_err_t s_http_event_handler(esp_http_client_event_t *evt)
 {
     // Http Event Handler
 
     switch(evt->event_id){
         case HTTP_EVENT_ON_DATA:
-            if (!esp_http_client_is_chunked_response(evt->client)){
+            if(evt->data_len > 0){
                 if(s_response_len + evt->data_len < DRIVER_API_RESPONSE_LEN_MAX){
                     memcpy(s_response + s_response_len, evt->data, evt->data_len);
                     s_response_len += evt->data_len;
                 }
             }
+            break;
+        
+        case HTTP_EVENT_ON_FINISH:
+            // Null-terminate Response
+            s_response[s_response_len] = '\0';
             break;
         
         default:

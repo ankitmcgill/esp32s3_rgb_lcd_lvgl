@@ -1,6 +1,8 @@
 // MODULE_API
 // JANUARY 1, 2026
 
+#include <time.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_timer.h"
@@ -116,7 +118,13 @@ static void s_task_function(void *pvParameters)
 
 static void s_timer_cb(void *arg)
 {
+    // Get Weather
     if(!DRIVER_API_GetWeather(&s_info_weather)){
+        ESP_LOGE(DEBUG_TAG_MODULE_WIFI, "Weather api fail");
+    }
+
+    // Get Time
+    if(!DRIVER_API_GetTime(&s_info_time)){
         ESP_LOGE(DEBUG_TAG_MODULE_WIFI, "Weather api fail");
     }
 }
