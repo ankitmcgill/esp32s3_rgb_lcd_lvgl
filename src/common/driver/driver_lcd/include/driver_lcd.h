@@ -12,7 +12,7 @@
 #include "util_dataqueue.h"
 
 #define DRIVER_LCD_LVGL_TICK_PERIOD_MS      (2)
-#define DRIVER_LCD_LVGL_TASK_PERIOD_MS      (10)
+#define DRIVER_LCD_LVGL_TASK_PERIOD_MS      (50)
 
 #define DRIVER_LCD_DISPLAY_HRES             (800)
 #define DRIVER_LCD_DISPLAY_VRES             (480)

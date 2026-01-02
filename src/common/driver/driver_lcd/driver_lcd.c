@@ -107,7 +107,7 @@ static bool s_lcd_rgb_panel_setup(void)
         .bounce_buffer_size_px = 10 * DRIVER_LCD_DISPLAY_HRES,
         .flags.fb_in_psram = true,
         .timings = {
-            .pclk_hz = (21 * 1000 * 1000),
+            .pclk_hz = (18 * 1000 * 1000),
             .h_res = DRIVER_LCD_DISPLAY_HRES,
             .v_res = DRIVER_LCD_DISPLAY_VRES,
             .hsync_pulse_width = 40,
