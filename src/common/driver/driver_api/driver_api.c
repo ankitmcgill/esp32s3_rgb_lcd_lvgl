@@ -42,12 +42,6 @@ bool DRIVER_API_Init(void)
     assert(s_api_url);
 
     ESP_LOGI(DEBUG_TAG_DRIVER_API, "Type %u. Init", s_component_type);
-    ESP_LOGI(DEBUG_TAG_DRIVER_API, 
-        "City %s. Country %s", 
-        DRIVER_API_WEATHER_CITYNAME,
-        DRIVER_API_WEATHER_COUNTRYCODE
-    );
-    ESP_LOGI(DEBUG_TAG_DRIVER_API, "Api Url : %s", s_api_url);
 
     return true;
 }
