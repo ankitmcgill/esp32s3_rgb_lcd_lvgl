@@ -146,7 +146,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "192.168.0.120",
+                        "strval": "---",
                         "InheritedType": 10
                       },
                       {
@@ -164,7 +164,7 @@
                                   0,
                                   0,
                                   0,
-                                  128
+                                  140
                                 ],
                                 "InheritedType": 7
                               },
@@ -323,7 +323,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "10 mins ago",
+                        "strval": "---",
                         "InheritedType": 10
                       },
                       {
@@ -341,7 +341,7 @@
                                   0,
                                   0,
                                   0,
-                                  128
+                                  140
                                 ],
                                 "InheritedType": 7
                               },
@@ -806,7 +806,7 @@
                           {
                             "nid": 1030,
                             "strtype": "LABEL/Text",
-                            "strval": "AM",
+                            "strval": "--",
                             "InheritedType": 10
                           },
                           {
@@ -976,7 +976,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "10:30",
+                        "strval": "--:--",
                         "InheritedType": 10
                       },
                       {
@@ -1449,7 +1449,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "Tuesday, April 30 2005",
+                        "strval": "---",
                         "InheritedType": 10
                       },
                       {
@@ -1906,7 +1906,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "Bengaluru, IN",
+                        "strval": "--------",
                         "InheritedType": 10
                       },
                       {
@@ -3429,7 +3429,7 @@
     "theme_color1": 5,
     "theme_color2": 0,
     "custom_variable_prefix": "uic",
-    "backup_cnt": 93,
+    "backup_cnt": 95,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "9.2.2",
