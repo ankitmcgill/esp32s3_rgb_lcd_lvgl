@@ -13,6 +13,7 @@
 #include "driver_appinfo.h"
 #include "driver_lcd.h"
 #include "driver_spiffs.h"
+#include "ui.h"
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
 
@@ -90,8 +91,9 @@ void app_main(void)
     DRIVER_LCD_Init();
     MODULE_LCD_Init();
 
-    // Lcd Demo
-    MODULE_LCD_Demo();
+    // Start UI
+    MODULE_LCD_SetUIFunction(ui_init);
+    MODULE_LCD_StartUI();
 
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called

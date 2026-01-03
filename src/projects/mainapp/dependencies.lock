@@ -1,0 +1,61 @@
+dependencies:
+  espressif/esp-lib-utils:
+    component_hash: 9e81fa27e3a8292bed95d91754ebcb8f27f47117328b0b646446f29fc5a847fb
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.1'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 0.2.3
+  espressif/esp32_display_panel:
+    component_hash: a58d89c4691c84b1a00aa522955f8994d461d3b3dbc4407a85bc91220b9b27fb
+    dependencies:
+    - name: espressif/esp-lib-utils
+      registry_url: https://components.espressif.com
+      require: public
+      version: 0.2.*
+    - name: espressif/esp32_io_expander
+      registry_url: https://components.espressif.com
+      require: public
+      version: 1.*
+    - name: idf
+      require: private
+      version: '>=5.1'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.0.4
+  espressif/esp32_io_expander:
+    component_hash: c34d64ac6022fb351dc8e2a24eff5b60884c91fd8c50f96dd7d1b1728fae16d8
+    dependencies:
+    - name: espressif/esp-lib-utils
+      registry_url: https://components.espressif.com
+      require: public
+      version: 0.2.*
+    - name: idf
+      require: private
+      version: '>=5.1'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.1.1
+  idf:
+    source:
+      type: idf
+    version: 5.5.1
+  lvgl/lvgl:
+    component_hash: 17e68bfd21f0edf4c3ee838e2273da840bf3930e5dbc3bfa6c1190c3aed41f9f
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 9.4.0
+direct_dependencies:
+- espressif/esp32_display_panel
+- idf
+- lvgl/lvgl
+manifest_hash: d3f8bf4c5871059a91a7b37fa3d2cead53d5a9b803b08345ec4bb2205fe0f10b
+target: esp32s3
+version: 2.0.0

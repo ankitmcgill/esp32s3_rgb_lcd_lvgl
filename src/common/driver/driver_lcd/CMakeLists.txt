@@ -4,9 +4,8 @@ idf_component_register(SRCS
                          "include"
                        PRIV_REQUIRES
                             esp_lcd
-                            espressif__esp_lvgl_port
+                            lvgl__lvgl
                             esp_common
-                            ui
                             defines
                             bsp
                        REQUIRES

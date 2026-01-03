@@ -1,0 +1,14 @@
+idf_component_register(SRCS "module_api.c"
+                       INCLUDE_DIRS "include"
+                       PRIV_REQUIRES
+                            driver_api
+                            driver_wifi
+                            util_dataqueue
+                            defines
+                            project_defines
+                       REQUIRES
+                            esp_wifi
+                            esp_timer
+                            nvs_flash
+                            freertos
+)

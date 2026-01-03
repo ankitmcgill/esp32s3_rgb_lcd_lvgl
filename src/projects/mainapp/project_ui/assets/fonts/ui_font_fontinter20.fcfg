@@ -1,0 +1,16 @@
+{
+  "codename": "fontinter20",
+  "ttf_path": "/assets/fonts/Inter_18pt-Regular.ttf",
+  "bin_path": "/assets/fonts/ui_font_fontinter20.bin",
+  "c_path": "/assets/fonts/ui_font_fontinter20.c",
+  "cfg_path": "/assets/fonts/ui_font_fontinter20.fcfg",
+  "size": 20,
+  "bpp": 4,
+  "letters": 0,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}
