@@ -99,15 +99,13 @@ bool DRIVER_WIFI_Init(void)
     ));
 
     // Create Driver Wifi Task
-    // Pinned to Core 0
-    xTaskCreatePinnedToCore(
+    xTaskCreate(
         s_task_function,
         "t-d-wifi",
         TASK_STACK_DEPTH_DRIVER_WIFI,
         NULL,
         TASK_PRIORITY_DRIVER_WIFI,
-        &handle_task_driver_wifi,
-        0
+        &handle_task_driver_wifi
     );
 
     ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Type %u. Init. Hostname %s", s_component_type, hostname);

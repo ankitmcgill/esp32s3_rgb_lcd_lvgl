@@ -49,15 +49,13 @@ bool MODULE_API_Init(void)
     DRIVER_WIFI_AddNotificationTarget(&s_dataqueue);
 
     // Create Task
-    // Pinned to Core 0
-    xTaskCreatePinnedToCore(
+    xTaskCreate(
         s_task_function,
         "t-m-api",
         TASK_STACK_DEPTH_MODULE_API,
         NULL,
         TASK_PRIORITY_MODULE_API,
-        &handle_task_module_api,
-        0
+        &handle_task_module_api
     );
 
     ESP_LOGI(DEBUG_TAG_MODULE_API, "Type %u. Init", s_component_type);
