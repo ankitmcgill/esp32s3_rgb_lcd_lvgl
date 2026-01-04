@@ -24,6 +24,12 @@
 #include "define_rtos_tasks.h"
 #include "bsp.h"
 
+// Display & Frambeuffer Flags
+// Lvgl Refresh Modes (DRIVER_LCD_USE_LVGL_FULL_REFRESH or DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH)
+#define DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH
+// Bounce Buffer
+#define DRIVER_LCD_USE_BOUNCE_BUFFER
+
 // Extern Variables
 
 // Local Variables
@@ -102,10 +108,22 @@ static bool s_lcd_rgb_panel_setup(void)
         .clk_src = LCD_CLK_SRC_PLL160M,
         .data_width = 16,
         .bits_per_pixel = 16,
+        #if defined DRIVER_LCD_LVGL_USE_FULL_REFRESH
         .num_fbs = 2,
+        #endif
+        #if defined DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH
+        .num_fbs = 1,
+        #endif
         .psram_trans_align = 64,
+        #if defined DRIVER_LCD_USE_BOUNCE_BUFFER
         .bounce_buffer_size_px = 10 * DRIVER_LCD_DISPLAY_HRES,
+        #endif
+        #if defined DRIVER_LCD_LVGL_USE_FULL_REFRESH
         .flags.fb_in_psram = true,
+        #endif
+        #if defined DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH
+        .flags.fb_in_psram = true,
+        #endif
         .timings = {
             .pclk_hz = (18 * 1000 * 1000),
             .h_res = DRIVER_LCD_DISPLAY_HRES,
@@ -193,21 +211,41 @@ static bool s_lvgl_setup(void)
     esp_err_t ret = ESP_OK;
     void* buf1 = NULL;
     void* buf2 = NULL;
-    size_t buf_size = (DRIVER_LCD_UI_HRES * DRIVER_LCD_UI_VRES * sizeof(lv_color16_t));
+    #if defined DRIVER_LCD_LVGL_USE_FULL_REFRESH
+    size_t buf_size = (DRIVER_LCD_DISPLAY_HRES * DRIVER_LCD_DISPLAY_VRES * sizeof(lv_color16_t));
+    #endif
+    #if defined DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH
+    size_t buf_size = (100 * DRIVER_LCD_DISPLAY_HRES);
+    #endif
 
     (void)ret;
 
     // Initialize Lvgl
     lv_init();
 
-    // Allocate Buffers - Use Esp Lcd Rgb Panel Buffers
+    // Allocate Buffers
+    #if defined DRIVER_LCD_LVGL_USE_FULL_REFRESH
+    // Use Esp Lcd Rgb Panel Buffers
     ESP_LOGI(DEBUG_TAG_DRIVER_LCD, "Using Esp Lcd Rgb Panel fb");
     ESP_ERROR_CHECK(esp_lcd_rgb_panel_get_frame_buffer(s_handle_rgb_panel, 2, &buf1, &buf2));
     assert(buf1 && buf2);
+    #endif
+
+    #if defined DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH
+    buf1 = heap_caps_malloc(100 * DRIVER_LCD_DISPLAY_HRES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    assert(buf1);
+    buf2 = heap_caps_malloc(100 * DRIVER_LCD_DISPLAY_HRES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    assert(buf2);
+    #endif
 
     // Create An Lvgl Display & Initialize Buffers
-    s_lvgl_display = lv_display_create(DRIVER_LCD_UI_HRES, DRIVER_LCD_UI_VRES);
+    s_lvgl_display = lv_display_create(DRIVER_LCD_DISPLAY_HRES, DRIVER_LCD_DISPLAY_VRES);
+    #if defined DRIVER_LCD_LVGL_USE_FULL_REFRESH
     lv_display_set_buffers(s_lvgl_display, buf1, buf2, buf_size, LV_DISPLAY_RENDER_MODE_FULL);
+    #endif
+    #if defined DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH
+    lv_display_set_buffers(s_lvgl_display, buf1, buf2, buf_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    #endif
     assert(s_lvgl_display);
 
     // Set Color Depth
@@ -329,9 +367,6 @@ static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *
 {
     // Lvgl Flush Cb
     // Pass the Draw Buffer To The Driver
-
-    // Give Guiready semaphore
-    // xSemaphoreGive(s_handle_semaphore_guiready);
 
     // Wait For The VSync Event - With A Timeout
     // Forever Blocking Is Bad

@@ -16,8 +16,6 @@
 
 #define DRIVER_LCD_DISPLAY_HRES             (800)
 #define DRIVER_LCD_DISPLAY_VRES             (480)
-#define DRIVER_LCD_UI_HRES                  (DRIVER_LCD_DISPLAY_HRES)
-#define DRIVER_LCD_UI_VRES                  (DRIVER_LCD_DISPLAY_VRES)
 
 #define DRIVER_LCD_DATAQUEUE_MAX            (2)
 
