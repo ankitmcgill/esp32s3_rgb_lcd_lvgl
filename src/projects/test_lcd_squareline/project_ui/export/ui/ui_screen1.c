@@ -203,10 +203,6 @@ lv_obj_set_style_border_opa(ui_panel1, 150, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_width(ui_panel1, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_color(ui_panel1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_shadow_opa(ui_panel1, 50, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_width(ui_panel1, 50, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_spread(ui_panel1, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_offset_x(ui_panel1, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_offset_y(ui_panel1, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_container4 = lv_obj_create(ui_container2);
 lv_obj_remove_style_all(ui_container4);
@@ -230,10 +226,6 @@ lv_obj_set_style_border_opa(ui_panel2, 150, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_width(ui_panel2, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_color(ui_panel2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_shadow_opa(ui_panel2, 50, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_width(ui_panel2, 50, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_spread(ui_panel2, 1, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_offset_x(ui_panel2, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_shadow_offset_y(ui_panel2, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_container5 = lv_obj_create(ui_container2);
 lv_obj_remove_style_all(ui_container5);

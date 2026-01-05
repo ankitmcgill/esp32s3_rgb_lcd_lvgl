@@ -100,12 +100,13 @@ void app_main(void)
     free(buffer);
 
     // Intialize Drivers & Modules
-    DRIVER_LCD_Init();
-    MODULE_LCD_Init();
+    // Ensure All Other Peripherals Are Initialized Before Lcd So That Nothing Put Display DMA Out Of Sync
     DRIVER_WIFI_Init();
+    MODULE_WIFI_Init();
     DRIVER_API_Init();
     MODULE_API_Init();
-    MODULE_WIFI_Init();
+    DRIVER_LCD_Init();
+    MODULE_LCD_Init();
 
     // Start UI
     MODULE_LCD_SetUIFunction(ui_init);

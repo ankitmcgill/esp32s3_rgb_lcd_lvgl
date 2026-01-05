@@ -25,7 +25,7 @@
 #include "bsp.h"
 
 // Display & Frambeuffer Flags
-// Lvgl Refresh Modes (DRIVER_LCD_USE_LVGL_FULL_REFRESH or DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH)
+// Lvgl Refresh Modes (DRIVER_LCD_LVGL_USE_FULL_REFRESH or DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH)
 #define DRIVER_LCD_LVGL_USE_PARTIAL_REFRESH
 // Bounce Buffer
 #define DRIVER_LCD_USE_BOUNCE_BUFFER
@@ -339,13 +339,10 @@ static bool s_lcd_rgb_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd
 {
     // Esp_lcd Panel Vsync Cb
 
-    // ESP_EARLY_LOGI(DEBUG_TAG_DRIVER_LCD, "vsync cb");
     BaseType_t high_task_awoken = pdFALSE;
 
-    // Wait Till Lvgl Has Finished
-    // if(xSemaphoreTakeFromISR(s_handle_semaphore_guiready, &high_task_awoken) == pdTRUE){
-        xSemaphoreGiveFromISR(s_handle_semaphore_vsync, &high_task_awoken);
-    // }
+    // ESP_EARLY_LOGI(DEBUG_TAG_DRIVER_LCD, "vsync cb");
+    xSemaphoreGiveFromISR(s_handle_semaphore_vsync, &high_task_awoken);
 
     return (high_task_awoken == pdTRUE);
 }
@@ -356,8 +353,6 @@ static bool s_lcd_rgb_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const e
     // Tell Lvgl Ready To Swap Buffers
 
     // ESP_EARLY_LOGI(DEBUG_TAG_DRIVER_LCD, "color trans done cb");
-
-    // Notify Lvgl Flush Ready
     lv_display_flush_ready(s_lvgl_display);
 
     return false;
@@ -370,9 +365,11 @@ static void s_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *
 
     // Wait For The VSync Event - With A Timeout
     // Forever Blocking Is Bad
-    if(xSemaphoreTake(s_handle_semaphore_vsync, pdMS_TO_TICKS(20)) != pdTRUE){
+    #if defined DRIVER_LCD_LVGL_USE_FULL_REFRESH
+    if(xSemaphoreTake(s_handle_semaphore_vsync, pdMS_TO_TICKS(30)) != pdTRUE){
         ESP_LOGW(DEBUG_TAG_DRIVER_LCD, "VSYNC timeout");
     }
+    #endif
     esp_lcd_panel_draw_bitmap(s_handle_rgb_panel,
         area->x1,
         area->y1,
