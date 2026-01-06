@@ -9,10 +9,10 @@ idf_component_register(SRCS "main.c"
                             module_lcd
                             module_wifi
                             module_api
-                            ui
                             util_dataqueue
                             defines
                             project_defines
+                            ui
                         PRIV_REQUIRES
                             spi_flash
                             nvs_flash

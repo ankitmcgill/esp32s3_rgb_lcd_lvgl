@@ -17,7 +17,6 @@
 #include "driver_chipinfo.h"
 #include "driver_appinfo.h"
 #include "driver_spiffs.h"
-#include "ui.h"
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
 
@@ -39,6 +38,7 @@ void app_main(void)
     uint32_t size_flash;
     uint32_t size_ram;
     uint8_t* buffer = (uint8_t*)malloc(512);
+    util_dataqueue_item_t dq_i;
 
     size_flash = DRIVER_CHIPINFO_GetFlashSizeBytes();
     size_ram = DRIVER_CHIPINFO_GetRamSizeBytes();
@@ -109,11 +109,9 @@ void app_main(void)
     MODULE_LCD_Init();
 
     // Start UI
-    MODULE_LCD_SetUIFunction(ui_init);
     MODULE_LCD_StartUI();
 
     // Connect To Wifi
-    util_dataqueue_item_t dq_i;
     dq_i.data_type = DATA_TYPE_COMMAND;
     dq_i.data = MODULE_WIFI_COMMAND_CONNECT;
     MODULE_WIFI_AddCommand(&dq_i);

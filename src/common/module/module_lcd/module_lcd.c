@@ -42,13 +42,6 @@ bool MODULE_LCD_Init(void)
     return true;
 }
 
-void MODULE_LCD_SetUIFunction(void (*ptr)(void))
-{
-    // Set UI Init Function
-
-    DRIVER_LCD_SetUIFunction(ptr);
-}
-
 bool MODULE_LCD_StartUI(void)
 {
     // Start UI

@@ -13,7 +13,6 @@
 
 bool MODULE_LCD_Init(void);
 
-void MODULE_LCD_SetUIFunction(void (*ptr)(void));
 bool MODULE_LCD_StartUI(void);
 bool MODULE_LCD_Demo(void);
 

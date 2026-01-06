@@ -92,7 +92,6 @@ void app_main(void)
     MODULE_LCD_Init();
 
     // Start UI
-    MODULE_LCD_SetUIFunction(ui_init);
     MODULE_LCD_StartUI();
 
     // Start Scheduler

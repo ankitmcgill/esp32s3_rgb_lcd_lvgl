@@ -26,8 +26,6 @@ typedef enum {
 
 bool DRIVER_LCD_Init(void);
 
-void DRIVER_LCD_SetUIFunction(void (*ptr)(void));
-
 bool DRIVER_LCD_AddCommand(util_dataqueue_item_t* dq_i);
 
 #endif

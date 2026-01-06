@@ -100,7 +100,9 @@ static void s_task_function(void *pvParameters)
                         case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
                             ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Wifi disconnected. Stopping periodic api");
 
-                            ESP_ERROR_CHECK(esp_timer_stop(s_timer));
+                            if(esp_timer_is_active(s_timer)){
+                                ESP_ERROR_CHECK(esp_timer_stop(s_timer));
+                            }
                             break;
                         
                         default:

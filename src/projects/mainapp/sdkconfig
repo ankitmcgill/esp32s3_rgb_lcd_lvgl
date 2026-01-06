@@ -2004,6 +2004,14 @@ CONFIG_VFS_INITIALIZE_DEV_NULL=y
 # end of Virtual file system
 
 #
+# Project Configurations
+#
+CONFIG_INCLUDE_UI=y
+CONFIG_LVGL_PARTIAL_REFRESH=y
+# CONFIG_LVGL_FULL_REFRESH is not set
+# end of Project Configurations
+
+#
 # ESP Library Utils Configurations
 #
 CONFIG_ESP_UTILS_CONF_FILE_SKIP=y
