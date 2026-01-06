@@ -7,4 +7,10 @@
         "*.backup": "c"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/clang",
+    "C_Cpp.files.exclude": {
+        "**/.vscode": true,
+        "**/.vs": true,
+        "**/managed_components": true,
+        "**/project_ui": true,
+    },
 }
