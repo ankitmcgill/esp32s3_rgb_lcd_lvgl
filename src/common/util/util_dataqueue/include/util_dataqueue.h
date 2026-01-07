@@ -17,10 +17,23 @@ typedef enum{
     DATA_TYPE_NOTIFICATION
 }util_dataqueue_data_type_t;
 
+typedef struct{
+    union{
+        char ip[16];
+        struct{
+            uint32_t timestamp;
+            char time_string[16];
+            char am_pm_string[3];
+            char date_string[48];
+        }timedata;
+    }value;
+}util_dataqueue_data_buffer_type_t;
+
 typedef struct
 {
     uint8_t data;
     util_dataqueue_data_type_t data_type;
+    util_dataqueue_data_buffer_type_t data_buff;
 }util_dataqueue_item_t;
 
 typedef struct

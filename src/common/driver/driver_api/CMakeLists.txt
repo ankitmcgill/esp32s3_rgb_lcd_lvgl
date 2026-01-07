@@ -5,6 +5,7 @@ idf_component_register(SRCS "driver_api.c"
                             json
                             defines
                             project_defines
+                            util_dataqueue
                        REQUIRES
                             freertos
 )

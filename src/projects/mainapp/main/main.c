@@ -20,6 +20,8 @@
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
 
+static util_dataqueue_t s_dataqueue;
+
 void app_main(void)
 {
     // Initialize NVS
@@ -99,6 +101,9 @@ void app_main(void)
     }
     free(buffer);
 
+    // Create Data Queue
+    UTIL_DATAQUEUE_Create(&s_dataqueue, 4);
+    
     // Intialize Drivers & Modules
     // Ensure All Other Peripherals Are Initialized Before Lcd So That Nothing Put Display DMA Out Of Sync
     DRIVER_WIFI_Init();
@@ -108,6 +113,10 @@ void app_main(void)
     DRIVER_LCD_Init();
     MODULE_LCD_Init();
 
+    // Add Notification Targets
+    MODULE_WIFI_AddNotificationTarget(&s_dataqueue);
+    MODULE_API_AddNotificationTarget(&s_dataqueue);
+
     // Start UI
     MODULE_LCD_StartUI();
 
@@ -116,13 +125,43 @@ void app_main(void)
     dq_i.data = MODULE_WIFI_COMMAND_CONNECT;
     MODULE_WIFI_AddCommand(&dq_i);
 
-    ESP_LOGI(DEBUG_TAG_MAIN, "Waiting for wifi to connect...");
-
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called
     
+    ESP_LOGI(DEBUG_TAG_MAIN, "Starting main task");
+
     while(true)
     {
+        if(UTIL_DATAQUEUE_MessageCheck(&s_dataqueue))
+        {
+            if(UTIL_DATAQUEUE_MessageGet(&s_dataqueue, &dq_i, 0))
+            {
+                ESP_LOGI(DEBUG_TAG_MAIN, "New In DataQueue. Type %u, Data %u", dq_i.data_type, dq_i.data);
+                
+                if(dq_i.data_type == DATA_TYPE_NOTIFICATION)
+                {
+                    switch(dq_i.data)
+                    {
+                        case DRIVER_WIFI_NOTIFICATION_GOT_IP:
+                            MODULE_LCD_SetIP(dq_i.data_buff.value.ip);
+                            break;
+                        
+                        case DRIVER_WIFI_NOTIFICATION_LOST_IP:
+                        case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
+                            MODULE_LCD_SetIP("????");
+                            break;
+                        
+                        case DRIVER_API_NOTIFICATION_TIME_UPDATE:
+                            MODULE_LCD_SetTime((driver_api_time_info_t *)&dq_i.data_buff.value.timedata);
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 

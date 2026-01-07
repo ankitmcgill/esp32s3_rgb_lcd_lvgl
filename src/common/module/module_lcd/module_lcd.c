@@ -64,6 +64,30 @@ bool MODULE_LCD_Demo(void)
     return DRIVER_LCD_AddCommand(&dq_i);
 }
 
+bool MODULE_LCD_SetIP(char* ip)
+{
+    // Set IP Address Field
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_IP
+    };
+    strcpy(dq_i.data_buff.value.ip, ip);
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
+bool MODULE_LCD_SetTime(driver_api_time_info_t* ti)
+{
+    // Set Time Fields
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_TIME
+    };
+    memcpy(&dq_i.data_buff.value.timedata, ti, sizeof(driver_api_time_info_t));
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
 static void s_task_function(void *pvParameters)
 {
     // Task Function

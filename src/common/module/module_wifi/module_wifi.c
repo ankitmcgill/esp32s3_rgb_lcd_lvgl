@@ -78,6 +78,20 @@ bool MODULE_WIFI_AddCommand(util_dataqueue_item_t* dq_i)
     return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
 }
 
+bool MODULE_WIFI_AddNotificationTarget(util_dataqueue_t* dq)
+{
+    // Add Notification Target
+
+    if(s_notification_targets_count >= MODULE_WIFI_NOTIFICATION_TARGET_MAX){
+        return false;
+    }
+
+    s_notification_targets[s_notification_targets_count] = dq;
+    s_notification_targets_count += 1;
+
+    return true;
+}
+
 static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
 {
     // Send Notification
@@ -252,6 +266,10 @@ static void s_task_function(void *pvParameters)
                 }
                 else if(dq_i.data_type == DATA_TYPE_NOTIFICATION)
                 {
+                    // Pass Notification To Module Wifi Notification Targets
+                    s_notify(&dq_i, 0);
+
+                    // Take Action On Notification
                     switch(dq_i.data)
                     {
                         case DRIVER_WIFI_NOTIFICATION_SCAN_DONE:

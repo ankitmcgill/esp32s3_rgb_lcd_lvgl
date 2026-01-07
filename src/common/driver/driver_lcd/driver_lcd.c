@@ -312,6 +312,20 @@ static void s_task_lvgl(void *arg)
                             #endif
                             break;
                         
+                        case DRIVER_LCD_COMMAND_SET_IP:
+                            #ifdef CONFIG_INCLUDE_UI
+                            lv_label_set_text(ui_ipaddress, dq_i.data_buff.value.ip);
+                            #endif
+                            break;
+
+                        case DRIVER_LCD_COMMAND_SET_TIME:
+                            #ifdef CONFIG_INCLUDE_UI
+                            lv_label_set_text(ui_time, dq_i.data_buff.value.timedata.time_string);
+                            lv_label_set_text(ui_date, dq_i.data_buff.value.timedata.date_string);
+                            lv_label_set_text(ui_ampm, dq_i.data_buff.value.timedata.am_pm_string);
+                            #endif
+                            break;
+                        
                         default:
                             break;
                     }

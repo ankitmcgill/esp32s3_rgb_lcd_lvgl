@@ -20,11 +20,14 @@ TaskHandle_t handle_task_module_api;
 // Local Variables
 static rtos_component_type_t s_component_type;
 static util_dataqueue_t s_dataqueue;
+static uint8_t s_notification_targets_count;
+static util_dataqueue_t* s_notification_targets[MODULE_API_NOTIFICATION_TARGET_MAX];
 static esp_timer_handle_t s_timer;
 static driver_api_weather_info_t s_info_weather;
 static driver_api_time_info_t s_info_time;
 
 // Local Functions
+static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait);
 static void s_task_function(void *pvParameters);
 static void s_timer_cb(void *arg);
 
@@ -37,6 +40,7 @@ bool MODULE_API_Init(void)
 
     // Create Data Queue
     UTIL_DATAQUEUE_Create(&s_dataqueue, MODULE_API_DATAQUEUE_MAX);
+    s_notification_targets_count = 0;
 
     // Create Timer
     const esp_timer_create_args_t timer_args = {
@@ -47,6 +51,7 @@ bool MODULE_API_Init(void)
 
     // Add Notification Targets
     DRIVER_WIFI_AddNotificationTarget(&s_dataqueue);
+    DRIVER_API_AddNotificationTarget(&s_dataqueue);
 
     // Create Task
     xTaskCreate(
@@ -59,6 +64,31 @@ bool MODULE_API_Init(void)
     );
 
     ESP_LOGI(DEBUG_TAG_MODULE_API, "Type %u. Init", s_component_type);
+
+    return true;
+}
+
+bool MODULE_API_AddNotificationTarget(util_dataqueue_t* dq)
+{
+    // Add Notification Target
+
+    if(s_notification_targets_count >= MODULE_API_NOTIFICATION_TARGET_MAX){
+        return false;
+    }
+
+    s_notification_targets[s_notification_targets_count] = dq;
+    s_notification_targets_count += 1;
+
+    return true;
+}
+
+static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
+{
+    // Send Notification
+
+    for(uint8_t i = 0; i < s_notification_targets_count; i++){
+        UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait);
+    }
 
     return true;
 }
@@ -105,6 +135,10 @@ static void s_task_function(void *pvParameters)
                             }
                             break;
                         
+                        case DRIVER_API_NOTIFICATION_TIME_UPDATE:
+                            s_notify(&dq_i, 0);
+                            break;
+
                         default:
                             break;
                     }

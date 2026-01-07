@@ -9,16 +9,20 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#include "util_dataqueue.h"
+
 // Weather Api - Openweather (https://home.openweathermap.org/)
-#define DRIVER_API_WEATHER_URL_FORMAT   "http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric"
-#define DRIVER_API_WEATHER_CITYNAME     "Bengaluru"
-#define DRIVER_API_WEATHER_COUNTRYCODE  "IN"
-#define DRIVER_API_WEATHER_APIKEY       "302f94ec7416e369eea2c09309bfa098"
+#define DRIVER_API_WEATHER_URL_FORMAT       "http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric"
+#define DRIVER_API_WEATHER_CITYNAME         "Bengaluru"
+#define DRIVER_API_WEATHER_COUNTRYCODE      "IN"
+#define DRIVER_API_WEATHER_APIKEY           "302f94ec7416e369eea2c09309bfa098"
 
 // Time Api - Timezonedb (https://timezonedb.com/)
-#define DRIVER_API_TIME_URL_FORMAT  "http://api.timezonedb.com/v2.1/get-time-zone?key=%s&format=json&by=zone&zone=%s"
-#define DRIVER_API_TIME_ZONE        "Asia/Kolkata"
-#define DRIVER_API_TIME_APIKEY      "EQ26WOQQQD91"
+#define DRIVER_API_TIME_URL_FORMAT          "http://api.timezonedb.com/v2.1/get-time-zone?key=%s&format=json&by=zone&zone=%s"
+#define DRIVER_API_TIME_ZONE                "Asia/Kolkata"
+#define DRIVER_API_TIME_APIKEY              "EQ26WOQQQD91"
+
+#define DRIVER_API_NOTIFICATION_TARGET_MAX  (1)
 
 typedef struct{
     uint16_t weather_id;
@@ -38,7 +42,14 @@ typedef struct{
     char date_string[48];
 }driver_api_time_info_t;
 
+typedef enum{
+    DRIVER_API_NOTIFICATION_TIME_UPDATE = 0,
+    DRIVER_API_NOTIFICATION_WEATHER_UPDATE = 0,
+}driver_api_notification_type_t;
+
 bool DRIVER_API_Init(void);
+
+bool DRIVER_API_AddNotificationTarget(util_dataqueue_t* dq);
 
 bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info);
 bool DRIVER_API_GetTime(driver_api_time_info_t* t_info);

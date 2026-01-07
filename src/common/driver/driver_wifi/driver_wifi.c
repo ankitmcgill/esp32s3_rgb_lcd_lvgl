@@ -337,6 +337,9 @@ static void s_event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t
                 ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
                 ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "IP : " IPSTR, IP2STR(&(event->ip_info.ip)));
 
+                // Send Notification
+                memset(&dq_i, sizeof(util_dataqueue_item_t), 0);
+                sprintf(dq_i.data_buff.value.ip, IPSTR, IP2STR(&(event->ip_info.ip)));
                 dq_i.data = DRIVER_WIFI_NOTIFICATION_GOT_IP;
                 s_notify(&dq_i, 0);
                 break;
