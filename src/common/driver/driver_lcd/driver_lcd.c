@@ -44,12 +44,15 @@ static esp_lcd_panel_handle_t s_handle_rgb_panel;
 static SemaphoreHandle_t s_handle_semaphore_vsync;
 static SemaphoreHandle_t s_handle_semaphore_guiready;
 static esp_timer_handle_t s_timer;
+static esp_timer_handle_t s_timer_one_second;
 static lv_display_t* s_lvgl_display;
+static char s_last_second_dot[2] = {',', 0};
 
 // Local Functions
 static bool s_lcd_rgb_panel_setup(void);
 static bool s_lvgl_setup(void);
 static void s_task_lvgl(void *arg);
+static void s_timer_one_second_cb(void *arg);
 static void s_lvgl_tick_timer_cb(void* arg);
 static bool s_lcd_rgb_panel_vsync_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data);
 static bool s_lcd_rgb_panel_color_trans_cb(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx);
@@ -72,6 +75,13 @@ bool DRIVER_LCD_Init(void)
     // Create Data Queue
     UTIL_DATAQUEUE_Create(&s_dataqueue, DRIVER_LCD_DATAQUEUE_MAX);
     assert(s_dataqueue.handle);
+
+    // Create Timer
+    const esp_timer_create_args_t timer_args = {
+        .callback = &s_timer_one_second_cb,
+        .name = "periodic_timer"
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&timer_args, &s_timer_one_second));
 
     // Initialize Display Subsystems
     if(!s_lcd_rgb_panel_setup()) goto err;
@@ -330,11 +340,15 @@ static void s_task_lvgl(void *arg)
                             lv_label_set_text(ui_date, dq_i.data_buff.value.timedata.date_string);
                             lv_label_set_text(ui_ampm, dq_i.data_buff.value.timedata.am_pm_string);
                             #endif
+                            
+                            // Start One Second Timer If Not Already Running
+                            if(!esp_timer_is_active(s_timer_one_second)){
+                                ESP_ERROR_CHECK(esp_timer_start_periodic(s_timer_one_second, 1000 * 1000));
+                            }
                             break;
                         
                         case DRIVER_LCD_COMMAND_SET_LOCATION:
                             #ifdef CONFIG_INCLUDE_UI
-                            ESP_LOGW(DEBUG_TAG_DRIVER_LCD, "+++++%s", dq_i.data_buff.value.location);
                             lv_label_set_text(ui_label1, dq_i.data_buff.value.location);
                             #endif
                             break;
@@ -349,6 +363,20 @@ static void s_task_lvgl(void *arg)
         lv_timer_handler();
         vTaskDelay(pdMS_TO_TICKS(DRIVER_LCD_LVGL_TASK_PERIOD_MS));
     }
+}
+
+static void s_timer_one_second_cb(void *arg)
+{
+    // Send One Second Notification
+
+    #ifdef CONFIG_INCLUDE_UI
+    lv_label_set_text(ui_secondsdot, s_last_second_dot);
+    if(strcmp(s_last_second_dot, ".") == 0){
+        s_last_second_dot[0] = ' ';
+    }else{
+        s_last_second_dot[0] = '.';
+    }
+    #endif
 }
 
 static void s_lvgl_tick_timer_cb(void* arg)

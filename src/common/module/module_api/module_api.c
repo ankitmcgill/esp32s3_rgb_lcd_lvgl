@@ -109,7 +109,7 @@ static void s_task_function(void *pvParameters)
         {
             if(UTIL_DATAQUEUE_MessageGet(&s_dataqueue, &dq_i, 0))
             {
-                ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "New In DataQueue. Type %u, Data %u", dq_i.data_type, dq_i.data);
+                ESP_LOGI(DEBUG_TAG_MODULE_API, "New In DataQueue. Type %u, Data %u", dq_i.data_type, dq_i.data);
                 
                 if(dq_i.data_type == DATA_TYPE_COMMAND)
                 {
@@ -119,7 +119,7 @@ static void s_task_function(void *pvParameters)
                 {
                     switch(dq_i.data){
                         case DRIVER_WIFI_NOTIFICATION_GOT_IP:
-                            ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Wifi connected. Starting periodic api @ %us", MODULE_API_EXECUTE_PERIOD_S);
+                            ESP_LOGI(DEBUG_TAG_MODULE_API, "Wifi connected. Starting periodic api @ %us", MODULE_API_EXECUTE_PERIOD_S);
 
                             // Run Once Immidiately
                             s_timer_cb(NULL);
@@ -130,7 +130,7 @@ static void s_task_function(void *pvParameters)
                     
                         case DRIVER_WIFI_NOTIFICATION_LOST_IP:
                         case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
-                            ESP_LOGI(DEBUG_TAG_MODULE_WIFI, "Wifi disconnected. Stopping periodic api");
+                            ESP_LOGI(DEBUG_TAG_MODULE_API, "Wifi disconnected. Stopping periodic api");
 
                             if(esp_timer_is_active(s_timer)){
                                 ESP_ERROR_CHECK(esp_timer_stop(s_timer));
@@ -158,11 +158,11 @@ static void s_timer_cb(void *arg)
 {
     // Get Weather
     if(!DRIVER_API_GetWeather(&s_info_weather)){
-        ESP_LOGE(DEBUG_TAG_MODULE_WIFI, "Weather api fail");
+        ESP_LOGW(DEBUG_TAG_MODULE_API, "Weather api fail");
     }
 
     // Get Time
     if(!DRIVER_API_GetTime(&s_info_time)){
-        ESP_LOGE(DEBUG_TAG_MODULE_WIFI, "Weather api fail");
+        ESP_LOGW(DEBUG_TAG_MODULE_API, "Weather api fail");
     }
 }

@@ -44,7 +44,7 @@ typedef struct{
 
 typedef enum{
     DRIVER_API_NOTIFICATION_TIME_UPDATE = 0,
-    DRIVER_API_NOTIFICATION_WEATHER_UPDATE = 0,
+    DRIVER_API_NOTIFICATION_WEATHER_UPDATE,
 }driver_api_notification_type_t;
 
 bool DRIVER_API_Init(void);

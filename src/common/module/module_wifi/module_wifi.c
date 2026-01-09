@@ -223,8 +223,8 @@ static void s_state_mainiter(void)
         case MODULE_WIFI_STATE_GOT_IP:
             // Stop Timer
             if(esp_timer_is_active(s_wifi_timer_handle)){
-                    ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
-                }
+                ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
+            }
             s_state_set(MODULE_WIFI_STATE_IDLE);
             break;
         

@@ -6,13 +6,13 @@
 #include "ui.h"
 
 lv_obj_t *uic_date;
+lv_obj_t *uic_secondsdot;
 lv_obj_t *uic_ampm;
 lv_obj_t *uic_time;
-lv_obj_t *uic_lastupdated;
 lv_obj_t *uic_ipaddress;
 lv_obj_t *uic_containerbg;
 lv_obj_t *uic_Screen1;
-lv_obj_t *ui_screen1 = NULL;lv_obj_t *ui_containerbg = NULL;lv_obj_t *ui_container3 = NULL;lv_obj_t *ui_ipaddress = NULL;lv_obj_t *ui_lastupdated = NULL;lv_obj_t *ui_container9 = NULL;lv_obj_t *ui_container7 = NULL;lv_obj_t *ui_time = NULL;lv_obj_t *ui_ampm = NULL;lv_obj_t *ui_container8 = NULL;lv_obj_t *ui_container10 = NULL;lv_obj_t *ui_date = NULL;lv_obj_t *ui_container1 = NULL;lv_obj_t *ui_image1 = NULL;lv_obj_t *ui_label1 = NULL;lv_obj_t *ui_container2 = NULL;lv_obj_t *ui_container6 = NULL;lv_obj_t *ui_panel1 = NULL;lv_obj_t *ui_container4 = NULL;lv_obj_t *ui_panel2 = NULL;lv_obj_t *ui_container5 = NULL;
+lv_obj_t *ui_screen1 = NULL;lv_obj_t *ui_containerbg = NULL;lv_obj_t *ui_container3 = NULL;lv_obj_t *ui_ipaddress = NULL;lv_obj_t *ui_container9 = NULL;lv_obj_t *ui_container7 = NULL;lv_obj_t *ui_time = NULL;lv_obj_t *ui_ampm = NULL;lv_obj_t *ui_secondsdot = NULL;lv_obj_t *ui_container8 = NULL;lv_obj_t *ui_container10 = NULL;lv_obj_t *ui_date = NULL;lv_obj_t *ui_container1 = NULL;lv_obj_t *ui_image1 = NULL;lv_obj_t *ui_label1 = NULL;lv_obj_t *ui_container2 = NULL;lv_obj_t *ui_container6 = NULL;lv_obj_t *ui_panel1 = NULL;lv_obj_t *ui_container4 = NULL;lv_obj_t *ui_panel2 = NULL;lv_obj_t *ui_container5 = NULL;
 // event funtions
 
 // build funtions
@@ -53,21 +53,11 @@ ui_ipaddress = lv_label_create(ui_container3);
 lv_obj_set_width( ui_ipaddress, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_ipaddress, LV_SIZE_CONTENT);   /// 90
 lv_obj_set_align( ui_ipaddress, LV_ALIGN_CENTER );
-lv_label_set_text(ui_ipaddress,"---");
+lv_label_set_text(ui_ipaddress,"--------");
 lv_obj_set_style_text_color(ui_ipaddress, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_ipaddress, 140, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_decor(ui_ipaddress, LV_TEXT_DECOR_NONE, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_ipaddress, &lv_font_montserrat_16, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-ui_lastupdated = lv_label_create(ui_container3);
-lv_obj_set_width( ui_lastupdated, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_lastupdated, LV_SIZE_CONTENT);   /// 90
-lv_obj_set_align( ui_lastupdated, LV_ALIGN_RIGHT_MID );
-lv_label_set_text(ui_lastupdated,"---");
-lv_obj_set_style_text_color(ui_lastupdated, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_lastupdated, 140, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_decor(ui_lastupdated, LV_TEXT_DECOR_NONE, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_lastupdated, &lv_font_montserrat_16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_container9 = lv_obj_create(ui_containerbg);
 lv_obj_remove_style_all(ui_container9);
@@ -103,13 +93,24 @@ lv_obj_set_style_text_font(ui_time, &ui_font_fontinter120, LV_PART_MAIN| LV_STAT
 ui_ampm = lv_label_create(ui_time);
 lv_obj_set_width( ui_ampm, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_ampm, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_ampm, 0 );
-lv_obj_set_y( ui_ampm, -9 );
+lv_obj_set_x( ui_ampm, -2 );
+lv_obj_set_y( ui_ampm, -6 );
 lv_obj_set_align( ui_ampm, LV_ALIGN_TOP_RIGHT );
 lv_label_set_text(ui_ampm,"--");
 lv_obj_set_style_text_color(ui_ampm, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_ampm, 140, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_ampm, &ui_font_fontinter30, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+ui_secondsdot = lv_label_create(ui_container9);
+lv_obj_set_width( ui_secondsdot, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_secondsdot, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_secondsdot, LV_ALIGN_CENTER );
+lv_label_set_text(ui_secondsdot,".");
+lv_obj_set_style_text_color(ui_secondsdot, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_text_opa(ui_secondsdot, 140, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_align(ui_secondsdot, LV_TEXT_ALIGN_AUTO, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_decor(ui_secondsdot, LV_TEXT_DECOR_NONE, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(ui_secondsdot, &ui_font_fontinter120, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_container8 = lv_obj_create(ui_container9);
 lv_obj_remove_style_all(ui_container8);
@@ -129,7 +130,7 @@ ui_date = lv_label_create(ui_container10);
 lv_obj_set_width( ui_date, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_date, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_date, LV_ALIGN_CENTER );
-lv_label_set_text(ui_date,"---");
+lv_label_set_text(ui_date,"-------");
 lv_obj_set_style_text_color(ui_date, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_date, 140, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_date, &ui_font_fontinter30, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -157,7 +158,7 @@ ui_label1 = lv_label_create(ui_container1);
 lv_obj_set_width( ui_label1, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_label1, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_label1, LV_ALIGN_CENTER );
-lv_label_set_text(ui_label1,"--------");
+lv_label_set_text(ui_label1,"-------------");
 lv_obj_set_style_text_color(ui_label1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_label1, 140, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_label1, &ui_font_fontinter20, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -237,9 +238,9 @@ lv_obj_remove_flag( ui_container5, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABL
 uic_Screen1 = ui_screen1;
 uic_containerbg = ui_containerbg;
 uic_ipaddress = ui_ipaddress;
-uic_lastupdated = ui_lastupdated;
 uic_time = ui_time;
 uic_ampm = ui_ampm;
+uic_secondsdot = ui_secondsdot;
 uic_date = ui_date;
 
 }
@@ -256,14 +257,14 @@ ui_containerbg= NULL;
 ui_container3= NULL;
 uic_ipaddress= NULL;
 ui_ipaddress= NULL;
-uic_lastupdated= NULL;
-ui_lastupdated= NULL;
 ui_container9= NULL;
 ui_container7= NULL;
 uic_time= NULL;
 ui_time= NULL;
 uic_ampm= NULL;
 ui_ampm= NULL;
+uic_secondsdot= NULL;
+ui_secondsdot= NULL;
 ui_container8= NULL;
 ui_container10= NULL;
 uic_date= NULL;

@@ -17,11 +17,11 @@ extern lv_obj_t *ui_screen1;
 extern lv_obj_t *ui_containerbg;
 extern lv_obj_t *ui_container3;
 extern lv_obj_t *ui_ipaddress;
-extern lv_obj_t *ui_lastupdated;
 extern lv_obj_t *ui_container9;
 extern lv_obj_t *ui_container7;
 extern lv_obj_t *ui_time;
 extern lv_obj_t *ui_ampm;
+extern lv_obj_t *ui_secondsdot;
 extern lv_obj_t *ui_container8;
 extern lv_obj_t *ui_container10;
 extern lv_obj_t *ui_date;
@@ -38,9 +38,9 @@ extern lv_obj_t *ui_container5;
 extern lv_obj_t *uic_Screen1;
 extern lv_obj_t *uic_containerbg;
 extern lv_obj_t *uic_ipaddress;
-extern lv_obj_t *uic_lastupdated;
 extern lv_obj_t *uic_time;
 extern lv_obj_t *uic_ampm;
+extern lv_obj_t *uic_secondsdot;
 extern lv_obj_t *uic_date;
 
 #ifdef __cplusplus

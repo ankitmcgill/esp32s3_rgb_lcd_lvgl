@@ -102,16 +102,16 @@ void app_main(void)
     free(buffer);
 
     // Create Data Queue
-    UTIL_DATAQUEUE_Create(&s_dataqueue, 4);
+    UTIL_DATAQUEUE_Create(&s_dataqueue, 6);
     
     // Intialize Drivers & Modules
     // Ensure All Other Peripherals Are Initialized Before Lcd So That Nothing Put Display DMA Out Of Sync
-    DRIVER_LCD_Init();
-    MODULE_LCD_Init();
     DRIVER_WIFI_Init();
     MODULE_WIFI_Init();
     DRIVER_API_Init();
     MODULE_API_Init();
+    DRIVER_LCD_Init();
+    MODULE_LCD_Init();
 
     // Add Notification Targets
     MODULE_WIFI_AddNotificationTarget(&s_dataqueue);
@@ -153,7 +153,7 @@ void app_main(void)
                         
                         case DRIVER_WIFI_NOTIFICATION_LOST_IP:
                         case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
-                            MODULE_LCD_SetIP("????");
+                            MODULE_LCD_SetIP("-----");
                             break;
                         
                         case DRIVER_API_NOTIFICATION_TIME_UPDATE:
