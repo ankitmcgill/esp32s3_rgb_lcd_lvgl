@@ -86,7 +86,13 @@ bool DRIVER_LCD_AddCommand(util_dataqueue_item_t* dq_i)
 {
     // Add Command
 
-    return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
+    if(!UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0)){
+        ESP_LOGW(DEBUG_TAG_DRIVER_LCD, "Message Queue Failed %s", __FILE__);
+
+        return false;
+    }
+    
+    return true;
 }
 
 static bool s_lcd_rgb_panel_setup(void)
@@ -326,6 +332,13 @@ static void s_task_lvgl(void *arg)
                             #endif
                             break;
                         
+                        case DRIVER_LCD_COMMAND_SET_LOCATION:
+                            #ifdef CONFIG_INCLUDE_UI
+                            ESP_LOGW(DEBUG_TAG_DRIVER_LCD, "+++++%s", dq_i.data_buff.value.location);
+                            lv_label_set_text(ui_label1, dq_i.data_buff.value.location);
+                            #endif
+                            break;
+
                         default:
                             break;
                     }

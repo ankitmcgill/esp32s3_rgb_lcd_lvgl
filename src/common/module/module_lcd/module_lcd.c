@@ -88,6 +88,17 @@ bool MODULE_LCD_SetTime(driver_api_time_info_t* ti)
     return DRIVER_LCD_AddCommand(&dq_i);
 }
 
+bool MODULE_LCD_SetLocation(char* city_country)
+{
+    // Set City & Country
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_LOCATION
+    };
+    strcpy(dq_i.data_buff.value.location, city_country);
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
 static void s_task_function(void *pvParameters)
 {
     // Task Function

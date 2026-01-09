@@ -72,7 +72,6 @@ bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info)
 
     esp_err_t err;
     
-
     // Generate API Call Message
     // Allocate Buffers & Api Url
     s_response_len = 0;
@@ -281,7 +280,9 @@ static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
     // Send Notification
 
     for(uint8_t i = 0; i < s_notification_targets_count; i++){
-        UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait);
+        if(!UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait)){
+            ESP_LOGW(DEBUG_TAG_DRIVER_API, "Message Queue Failed");
+        }
     }
 
     return true;

@@ -17,13 +17,14 @@
 #define DRIVER_LCD_DISPLAY_HRES             (800)
 #define DRIVER_LCD_DISPLAY_VRES             (480)
 
-#define DRIVER_LCD_DATAQUEUE_MAX            (2)
+#define DRIVER_LCD_DATAQUEUE_MAX            (4)
 
 typedef enum {
     DRIVER_LCD_COMMAND_DEMO = 0,
     DRIVER_LCD_COMMAND_LOAD_UI,
     DRIVER_LCD_COMMAND_SET_IP,
-    DRIVER_LCD_COMMAND_SET_TIME
+    DRIVER_LCD_COMMAND_SET_TIME,
+    DRIVER_LCD_COMMAND_SET_LOCATION
 }driver_lcd_command_type_t;
 
 bool DRIVER_LCD_Init(void);

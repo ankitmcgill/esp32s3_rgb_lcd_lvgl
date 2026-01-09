@@ -75,7 +75,13 @@ bool MODULE_WIFI_AddCommand(util_dataqueue_item_t* dq_i)
 {
     // Add Command
 
-    return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
+    if(!UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0)){
+        ESP_LOGW(DEBUG_TAG_MODULE_WIFI, "Message Queue Failed %s", __FILE__);
+
+        return false;
+    }
+    
+    return true;
 }
 
 bool MODULE_WIFI_AddNotificationTarget(util_dataqueue_t* dq)
@@ -97,7 +103,9 @@ static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
     // Send Notification
 
     for(uint8_t i = 0; i < s_notification_targets_count; i++){
-        UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait);
+        if(!UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait)){
+            ESP_LOGW(DEBUG_TAG_MODULE_WIFI, "Message Queue Failed %s", __FILE__);
+        }
     }
 
     return true;

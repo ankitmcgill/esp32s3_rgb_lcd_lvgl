@@ -106,19 +106,26 @@ void app_main(void)
     
     // Intialize Drivers & Modules
     // Ensure All Other Peripherals Are Initialized Before Lcd So That Nothing Put Display DMA Out Of Sync
+    DRIVER_LCD_Init();
+    MODULE_LCD_Init();
     DRIVER_WIFI_Init();
     MODULE_WIFI_Init();
     DRIVER_API_Init();
     MODULE_API_Init();
-    DRIVER_LCD_Init();
-    MODULE_LCD_Init();
 
     // Add Notification Targets
     MODULE_WIFI_AddNotificationTarget(&s_dataqueue);
     MODULE_API_AddNotificationTarget(&s_dataqueue);
 
+    ESP_LOGI(DEBUG_TAG_MAIN, "Starting main task");
+
     // Start UI
     MODULE_LCD_StartUI();
+
+    vTaskDelay(pdMS_TO_TICKS(250));
+    
+    // Set Location
+    MODULE_LCD_SetLocation(DRIVER_API_WEATHER_CITYNAME","DRIVER_API_WEATHER_COUNTRYCODE);
 
     // Connect To Wifi
     dq_i.data_type = DATA_TYPE_COMMAND;
@@ -128,8 +135,6 @@ void app_main(void)
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called
     
-    ESP_LOGI(DEBUG_TAG_MAIN, "Starting main task");
-
     while(true)
     {
         if(UTIL_DATAQUEUE_MessageCheck(&s_dataqueue))
