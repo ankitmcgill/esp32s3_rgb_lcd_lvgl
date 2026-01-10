@@ -153,7 +153,7 @@ void app_main(void)
                         
                         case DRIVER_WIFI_NOTIFICATION_LOST_IP:
                         case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
-                            MODULE_LCD_SetIP("-----");
+                            MODULE_LCD_SetIP("");
                             break;
                         
                         case DRIVER_API_NOTIFICATION_TIME_UPDATE:

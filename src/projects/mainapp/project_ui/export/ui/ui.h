@@ -25,7 +25,10 @@ extern lv_obj_t *ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
 LV_IMG_DECLARE( ui_img_images_img_clear_day_png);   // assets/images/img_clear_day.png
+LV_IMG_DECLARE( ui_img_images_button_red_png);   // assets/images/button_red.png
 LV_IMG_DECLARE( ui_img_images_location_png);   // assets/images/location.png
+LV_IMG_DECLARE( ui_img_images_img_clear_night_png);   // assets/images/img_clear_night.png
+LV_IMG_DECLARE( ui_img_images_button_green_png);   // assets/images/button_green.png
 
 // FONTS
 LV_FONT_DECLARE( ui_font_fontinter120);

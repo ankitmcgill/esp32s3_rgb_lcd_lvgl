@@ -46,7 +46,7 @@ static SemaphoreHandle_t s_handle_semaphore_guiready;
 static esp_timer_handle_t s_timer;
 static esp_timer_handle_t s_timer_one_second;
 static lv_display_t* s_lvgl_display;
-static char s_last_second_dot[2] = {',', 0};
+static char s_second_panel_visible = true;
 
 // Local Functions
 static bool s_lcd_rgb_panel_setup(void);
@@ -331,6 +331,11 @@ static void s_task_lvgl(void *arg)
                         case DRIVER_LCD_COMMAND_SET_IP:
                             #ifdef CONFIG_INCLUDE_UI
                             lv_label_set_text(ui_ipaddress, dq_i.data_buff.value.ip);
+                            if(dq_i.data_buff.value.ip[0] == '\0'){
+                                lv_img_set_src(ui_imageconnection, &ui_img_images_button_red_png);
+                            }else{
+                                lv_image_set_src(ui_imageconnection, &ui_img_images_button_green_png);
+                            }
                             #endif
                             break;
 
@@ -370,12 +375,12 @@ static void s_timer_one_second_cb(void *arg)
     // Send One Second Notification
 
     #ifdef CONFIG_INCLUDE_UI
-    lv_label_set_text(ui_secondsdot, s_last_second_dot);
-    if(strcmp(s_last_second_dot, ".") == 0){
-        s_last_second_dot[0] = ' ';
+    if(s_second_panel_visible){
+        lv_obj_add_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
     }else{
-        s_last_second_dot[0] = '.';
+        lv_obj_clear_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
     }
+    s_second_panel_visible = !s_second_panel_visible;
     #endif
 }
 
