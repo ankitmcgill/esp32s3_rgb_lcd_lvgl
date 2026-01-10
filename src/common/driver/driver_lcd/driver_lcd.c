@@ -357,6 +357,17 @@ static void s_task_lvgl(void *arg)
                             lv_label_set_text(ui_label1, dq_i.data_buff.value.location);
                             #endif
                             break;
+                        
+                        case DRIVER_LCD_COMMAND_SET_SECOND:
+                            #ifdef CONFIG_INCLUDE_UI
+                            if(s_second_panel_visible){
+                                lv_obj_add_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
+                            }else{
+                                lv_obj_clear_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
+                            }
+                            s_second_panel_visible = !s_second_panel_visible;
+                            #endif
+                            break;
 
                         default:
                             break;
@@ -374,14 +385,11 @@ static void s_timer_one_second_cb(void *arg)
 {
     // Send One Second Notification
 
-    #ifdef CONFIG_INCLUDE_UI
-    if(s_second_panel_visible){
-        lv_obj_add_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
-    }else{
-        lv_obj_clear_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
-    }
-    s_second_panel_visible = !s_second_panel_visible;
-    #endif
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_SECOND
+    };
+    DRIVER_LCD_AddCommand(&dq_i);
 }
 
 static void s_lvgl_tick_timer_cb(void* arg)
