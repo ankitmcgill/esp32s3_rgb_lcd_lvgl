@@ -20,15 +20,12 @@
 
 // Local Variables
 static rtos_component_type_t s_component_type;
-static uint8_t s_notification_targets_count;
-static util_dataqueue_t* s_notification_targets[DRIVER_API_NOTIFICATION_TARGET_MAX];
 static char* s_api_url;
 static char* s_response;
 static uint16_t s_response_len;
 
 // Local Functions
 static void s_ts_to_time_strings(uint32_t ts, driver_api_time_info_t* t_info);
-static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait);
 static esp_err_t s_http_event_handler(esp_http_client_event_t *evt);
 
 // External Functions
@@ -44,24 +41,7 @@ bool DRIVER_API_Init(void)
     s_api_url = (char*)malloc(DRIVER_API_API_URL_LEN_MAX);
     assert(s_api_url);
 
-    // Create Data Queue
-    s_notification_targets_count = 0;
-
     ESP_LOGI(DEBUG_TAG_DRIVER_API, "Type %u. Init", s_component_type);
-
-    return true;
-}
-
-bool DRIVER_API_AddNotificationTarget(util_dataqueue_t* dq)
-{
-    // Add Notification Target
-
-    if(s_notification_targets_count >= DRIVER_API_NOTIFICATION_TARGET_MAX){
-        return false;
-    }
-
-    s_notification_targets[s_notification_targets_count] = dq;
-    s_notification_targets_count += 1;
 
     return true;
 }
@@ -177,9 +157,6 @@ bool DRIVER_API_GetTime(driver_api_time_info_t* t_info)
     // Get Time Data
 
     esp_err_t err;
-    util_dataqueue_item_t dq_i;
-    dq_i.data_type = DATA_TYPE_NOTIFICATION;
-    dq_i.data = DRIVER_API_NOTIFICATION_TIME_UPDATE;
 
     s_response_len = 0;
     memset(s_response, 0, DRIVER_API_RESPONSE_LEN_MAX);
@@ -226,13 +203,6 @@ bool DRIVER_API_GetTime(driver_api_time_info_t* t_info)
         ESP_LOGI(DEBUG_TAG_DRIVER_API, "Time String: %s", t_info->time_string);
         ESP_LOGI(DEBUG_TAG_DRIVER_API, "AM_PM String: %s", t_info->am_pm_string);
         ESP_LOGI(DEBUG_TAG_DRIVER_API, "Date String: %s", t_info->date_string);
-
-        // Send Notification
-        dq_i.data_buff.value.timedata.timestamp = ts->valueint;
-        strcpy(dq_i.data_buff.value.timedata.time_string, t_info->time_string);
-        strcpy(dq_i.data_buff.value.timedata.am_pm_string, t_info->am_pm_string);
-        strcpy(dq_i.data_buff.value.timedata.date_string, t_info->date_string);
-        s_notify(&dq_i, 0);
     }
 
     cJSON_Delete(root);
@@ -273,19 +243,6 @@ static void s_ts_to_time_strings(uint32_t ts, driver_api_time_info_t* t_info)
                 month[timeinfo.tm_mon],
                 timeinfo.tm_year + 1900
     );
-}
-
-static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
-{
-    // Send Notification
-
-    for(uint8_t i = 0; i < s_notification_targets_count; i++){
-        if(!UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait)){
-            ESP_LOGW(DEBUG_TAG_DRIVER_API, "Message Queue Failed");
-        }
-    }
-
-    return true;
 }
 
 static esp_err_t s_http_event_handler(esp_http_client_event_t *evt)

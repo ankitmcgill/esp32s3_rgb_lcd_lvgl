@@ -156,8 +156,12 @@ void app_main(void)
                             MODULE_LCD_SetIP("");
                             break;
                         
-                        case DRIVER_API_NOTIFICATION_TIME_UPDATE:
+                        case MODULE_API_NOTIFICATION_TIME_UPDATE:
                             MODULE_LCD_SetTime((driver_api_time_info_t *)&dq_i.data_buff.value.timedata);
+                            break;
+                        
+                        case MODULE_API_NOTIFICATION_WEATHER_UPDATE:
+                            MODULE_LCD_SetWeather((driver_api_weather_info_t *)&dq_i.data_buff.value.weatherdata);
                             break;
 
                         default:

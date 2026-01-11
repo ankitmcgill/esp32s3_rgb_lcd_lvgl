@@ -26,6 +26,10 @@ typedef struct{
             char am_pm_string[3];
             char date_string[48];
         }timedata;
+        struct{
+            char humidity[8];
+            char temp[8];
+        }weatherdata;
         char location[16];
     }value;
 }util_dataqueue_data_buffer_type_t;

@@ -22,15 +22,13 @@
 #define DRIVER_API_TIME_ZONE                "Asia/Kolkata"
 #define DRIVER_API_TIME_APIKEY              "EQ26WOQQQD91"
 
-#define DRIVER_API_NOTIFICATION_TARGET_MAX  (1)
-
 typedef struct{
     uint16_t weather_id;
     char weather_main[16];
     char weather_description[32];
     char weather_icon[8];
-    float temp;
-    float humidity;
+    double temp;
+    int humidity;
     uint32_t sunrise;
     uint32_t sunset;
 }driver_api_weather_info_t;
@@ -42,14 +40,7 @@ typedef struct{
     char date_string[48];
 }driver_api_time_info_t;
 
-typedef enum{
-    DRIVER_API_NOTIFICATION_TIME_UPDATE = 0,
-    DRIVER_API_NOTIFICATION_WEATHER_UPDATE,
-}driver_api_notification_type_t;
-
 bool DRIVER_API_Init(void);
-
-bool DRIVER_API_AddNotificationTarget(util_dataqueue_t* dq);
 
 bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info);
 bool DRIVER_API_GetTime(driver_api_time_info_t* t_info);

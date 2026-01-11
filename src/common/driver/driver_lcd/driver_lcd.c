@@ -355,6 +355,13 @@ static void s_task_lvgl(void *arg)
                                 ESP_ERROR_CHECK(esp_timer_start_periodic(s_timer_one_second, 1000 * 1000));
                             }
                             break;
+
+                        case DRIVER_LCD_COMMAND_SET_WEATHER:
+                            #ifdef CONFIG_INCLUDE_UI
+                            lv_label_set_text(ui_labelhumidity, dq_i.data_buff.value.weatherdata.humidity);
+                            lv_label_set_text(uic_labelhtemperature, dq_i.data_buff.value.weatherdata.temp);
+                            #endif
+                            break;
                         
                         case DRIVER_LCD_COMMAND_SET_LOCATION:
                             #ifdef CONFIG_INCLUDE_UI
@@ -390,7 +397,7 @@ static void s_task_lvgl(void *arg)
 static void s_timer_one_second_cb(void *arg)
 {
     // Send One Second Notification
-    
+
     s_update_seconds = true;
 }
 

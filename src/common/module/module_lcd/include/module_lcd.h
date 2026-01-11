@@ -20,5 +20,6 @@ bool MODULE_LCD_Demo(void);
 bool MODULE_LCD_SetIP(char* ip);
 bool MODULE_LCD_SetTime(driver_api_time_info_t* ti);
 bool MODULE_LCD_SetLocation(char* city_country);
+bool MODULE_LCD_SetWeather(driver_api_weather_info_t* wi);
 
 #endif

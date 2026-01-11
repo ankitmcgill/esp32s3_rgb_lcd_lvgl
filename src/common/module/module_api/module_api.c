@@ -18,6 +18,8 @@
 TaskHandle_t handle_task_module_api;
 
 // Local Variables
+static module_api_state_t s_state;
+static module_api_state_t s_state_prev;
 static rtos_component_type_t s_component_type;
 static util_dataqueue_t s_dataqueue;
 static uint8_t s_notification_targets_count;
@@ -27,6 +29,8 @@ static driver_api_weather_info_t s_info_weather;
 static driver_api_time_info_t s_info_time;
 
 // Local Functions
+static void s_state_set(module_api_state_t newstate);
+static void s_state_mainiter(void);
 static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait);
 static void s_task_function(void *pvParameters);
 static void s_timer_cb(void *arg);
@@ -37,6 +41,9 @@ bool MODULE_API_Init(void)
     // Initialize Module Api
 
     s_component_type = COMPONENT_TYPE_TASK;
+    s_state = -1;
+    s_state_prev = -1;
+    s_state_set(MODULE_API_STATE_IDLE);
 
     // Create Data Queue
     UTIL_DATAQUEUE_Create(&s_dataqueue, MODULE_API_DATAQUEUE_MAX);
@@ -51,7 +58,6 @@ bool MODULE_API_Init(void)
 
     // Add Notification Targets
     DRIVER_WIFI_AddNotificationTarget(&s_dataqueue);
-    DRIVER_API_AddNotificationTarget(&s_dataqueue);
 
     // Create Task
     xTaskCreate(
@@ -80,6 +86,69 @@ bool MODULE_API_AddNotificationTarget(util_dataqueue_t* dq)
     s_notification_targets_count += 1;
 
     return true;
+}
+
+static void s_state_set(module_api_state_t newstate)
+{
+    // Module Api Set State
+    
+    if(s_state == newstate){
+        return;
+    }
+
+    s_state_prev = s_state;
+    s_state = newstate;
+
+    ESP_LOGI(DEBUG_TAG_MODULE_API, "%u -> %u", s_state_prev, s_state);
+}
+
+static void s_state_mainiter(void)
+{
+    // State Mainiter
+    
+    util_dataqueue_item_t dq_i;
+    
+    switch(s_state)
+    {
+        case MODULE_API_STATE_IDLE:
+            // Do Nothing
+            break;
+
+        case MODULE_API_STATE_GET_TIME:
+            if(!DRIVER_API_GetTime(&s_info_time)){
+                ESP_LOGW(DEBUG_TAG_MODULE_API, "Time api fail");
+            }
+
+            // Send Notification
+            dq_i.data_type = DATA_TYPE_NOTIFICATION;
+            dq_i.data = MODULE_API_NOTIFICATION_TIME_UPDATE;
+            dq_i.data_buff.value.timedata.timestamp = s_info_time.timestamp;
+            strcpy(dq_i.data_buff.value.timedata.time_string, s_info_time.time_string);
+            strcpy(dq_i.data_buff.value.timedata.am_pm_string, s_info_time.am_pm_string);
+            strcpy(dq_i.data_buff.value.timedata.date_string, s_info_time.date_string);
+            s_notify(&dq_i, 0);
+
+            s_state_set(MODULE_API_STATE_GET_WEATHER);
+            break;
+
+        case MODULE_API_STATE_GET_WEATHER:
+            if(!DRIVER_API_GetWeather(&s_info_weather)){
+                ESP_LOGW(DEBUG_TAG_MODULE_API, "Weather api fail");
+            }
+
+            // Send Notification
+            dq_i.data_type = DATA_TYPE_NOTIFICATION;
+            dq_i.data = MODULE_API_NOTIFICATION_WEATHER_UPDATE;
+            sprintf(dq_i.data_buff.value.weatherdata.humidity, "%d %%", s_info_weather.humidity);
+            sprintf(dq_i.data_buff.value.weatherdata.temp, "%.0f C", s_info_weather.temp);
+            s_notify(&dq_i, 0);
+
+            s_state_set(MODULE_API_STATE_IDLE);
+            break;
+        
+        default:
+            break;
+    }
 }
 
 static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
@@ -137,16 +206,15 @@ static void s_task_function(void *pvParameters)
                             }
                             break;
                         
-                        case DRIVER_API_NOTIFICATION_TIME_UPDATE:
-                            s_notify(&dq_i, 0);
-                            break;
-
                         default:
                             break;
                     }
                 }
             }
         }
+
+        // Run State Mainiter
+        s_state_mainiter();
 
         vTaskDelay(pdMS_TO_TICKS(500));
     }
@@ -156,13 +224,5 @@ static void s_task_function(void *pvParameters)
 
 static void s_timer_cb(void *arg)
 {
-    // Get Weather
-    if(!DRIVER_API_GetWeather(&s_info_weather)){
-        ESP_LOGW(DEBUG_TAG_MODULE_API, "Weather api fail");
-    }
-
-    // Get Time
-    if(!DRIVER_API_GetTime(&s_info_time)){
-        ESP_LOGW(DEBUG_TAG_MODULE_API, "Weather api fail");
-    }
+    s_state_set(MODULE_API_STATE_GET_TIME);
 }

@@ -33,8 +33,18 @@ extern lv_obj_t *ui_label1;
 extern lv_obj_t *ui_container2;
 extern lv_obj_t *ui_container6;
 extern lv_obj_t *ui_panel1;
+extern lv_obj_t *ui_container14;
+extern lv_obj_t *ui_image4;
+extern lv_obj_t *ui_container15;
+extern lv_obj_t *ui_labelhtemperature;
+extern lv_obj_t *ui_label2;
 extern lv_obj_t *ui_container4;
 extern lv_obj_t *ui_panel2;
+extern lv_obj_t *ui_container12;
+extern lv_obj_t *ui_image2;
+extern lv_obj_t *ui_container13;
+extern lv_obj_t *ui_labelhumidity;
+extern lv_obj_t *ui_label4;
 extern lv_obj_t *ui_container5;
 // CUSTOM VARIABLES
 extern lv_obj_t *uic_Screen1;
@@ -44,6 +54,8 @@ extern lv_obj_t *uic_ipaddress;
 extern lv_obj_t *uic_time;
 extern lv_obj_t *uic_ampm;
 extern lv_obj_t *uic_date;
+extern lv_obj_t *uic_labelhtemperature;
+extern lv_obj_t *uic_labelhumidity;
 
 #ifdef __cplusplus
 } /*extern "C"*/

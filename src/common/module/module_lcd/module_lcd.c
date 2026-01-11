@@ -99,6 +99,19 @@ bool MODULE_LCD_SetLocation(char* city_country)
     strcpy(dq_i.data_buff.value.location, city_country);
     return DRIVER_LCD_AddCommand(&dq_i);
 }
+
+bool MODULE_LCD_SetWeather(driver_api_weather_info_t* wi)
+{
+    // Set Weather
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_WEATHER
+    };
+    memcpy(&dq_i.data_buff.value.weatherdata, wi, sizeof(driver_api_weather_info_t));
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
 static void s_task_function(void *pvParameters)
 {
     // Task Function
