@@ -1,0 +1,37 @@
+menu "Project Configurations"
+
+config INCLUDE_UI
+    bool "Include UI Code In This Project"
+    default n
+    help
+        Enabling this includes the ui code generated from Squareline studio in the project build
+
+# config LVGL_PARTIAL_REFRESH
+#     bool "Lvgl Partial Refresh"
+#     default y
+#     depends on !LVGL_FULL_REFRESH
+#     help
+#         Lvgl Partial Refresh
+
+# config LVGL_FULL_REFRESH
+#     bool "Lvgl Full Refresh"
+#     default n
+#     depends on !LVGL_PARTIAL_REFRESH
+#     help
+#         Lvgl Full Refresh
+
+choice lvgl_refresh
+    prompt "Select Lvgl Refresh Mode"
+    default LVGL_PARTIAL_REFRESH
+    
+    config LVGL_PARTIAL_REFRESH
+        bool "Lvgl Partial Refresh"
+        help
+            Lvgl Partial Refresh
+
+config LVGL_FULL_REFRESH
+        bool "Lvgl Full Refresh"
+        help
+            Lvgl Full Refresh
+endchoice
+endmenu

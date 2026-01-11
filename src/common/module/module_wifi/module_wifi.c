@@ -46,15 +46,13 @@ bool MODULE_WIFI_Init(void)
     s_notification_targets_count = 0;
 
     // Create Task
-    // Pinned to Core 0
-    xTaskCreatePinnedToCore(
+    xTaskCreate(
         s_task_function,
         "t-m-wifi",
         TASK_STACK_DEPTH_MODULE_WIFI,
         NULL,
         TASK_PRIORITY_MODULE_WIFI,
-        &handle_task_module_wifi,
-        0
+        &handle_task_module_wifi
     );
 
     // Setup Wifi Connect Timer
@@ -77,7 +75,27 @@ bool MODULE_WIFI_AddCommand(util_dataqueue_item_t* dq_i)
 {
     // Add Command
 
-    return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
+    if(!UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0)){
+        ESP_LOGW(DEBUG_TAG_MODULE_WIFI, "Message Queue Failed %s", __FILE__);
+
+        return false;
+    }
+    
+    return true;
+}
+
+bool MODULE_WIFI_AddNotificationTarget(util_dataqueue_t* dq)
+{
+    // Add Notification Target
+
+    if(s_notification_targets_count >= MODULE_WIFI_NOTIFICATION_TARGET_MAX){
+        return false;
+    }
+
+    s_notification_targets[s_notification_targets_count] = dq;
+    s_notification_targets_count += 1;
+
+    return true;
 }
 
 static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
@@ -85,7 +103,9 @@ static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
     // Send Notification
 
     for(uint8_t i = 0; i < s_notification_targets_count; i++){
-        UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait);
+        if(!UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait)){
+            ESP_LOGW(DEBUG_TAG_MODULE_WIFI, "Message Queue Failed %s", __FILE__);
+        }
     }
 
     return true;
@@ -203,8 +223,8 @@ static void s_state_mainiter(void)
         case MODULE_WIFI_STATE_GOT_IP:
             // Stop Timer
             if(esp_timer_is_active(s_wifi_timer_handle)){
-                    ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
-                }
+                ESP_ERROR_CHECK(esp_timer_stop(s_wifi_timer_handle));
+            }
             s_state_set(MODULE_WIFI_STATE_IDLE);
             break;
         
@@ -254,6 +274,10 @@ static void s_task_function(void *pvParameters)
                 }
                 else if(dq_i.data_type == DATA_TYPE_NOTIFICATION)
                 {
+                    // Pass Notification To Module Wifi Notification Targets
+                    s_notify(&dq_i, 0);
+
+                    // Take Action On Notification
                     switch(dq_i.data)
                     {
                         case DRIVER_WIFI_NOTIFICATION_SCAN_DONE:

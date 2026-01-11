@@ -17,9 +17,10 @@
 #include "driver_chipinfo.h"
 #include "driver_appinfo.h"
 #include "driver_spiffs.h"
-#include "ui.h"
 #include "define_rtos_tasks.h"
 #include "project_defines.h"
+
+static util_dataqueue_t s_dataqueue;
 
 void app_main(void)
 {
@@ -39,6 +40,7 @@ void app_main(void)
     uint32_t size_flash;
     uint32_t size_ram;
     uint8_t* buffer = (uint8_t*)malloc(512);
+    util_dataqueue_item_t dq_i;
 
     size_flash = DRIVER_CHIPINFO_GetFlashSizeBytes();
     size_ram = DRIVER_CHIPINFO_GetRamSizeBytes();
@@ -99,31 +101,76 @@ void app_main(void)
     }
     free(buffer);
 
+    // Create Data Queue
+    UTIL_DATAQUEUE_Create(&s_dataqueue, 6);
+    
     // Intialize Drivers & Modules
-    DRIVER_LCD_Init();
-    MODULE_LCD_Init();
+    // Ensure All Other Peripherals Are Initialized Before Lcd So That Nothing Put Display DMA Out Of Sync
     DRIVER_WIFI_Init();
+    MODULE_WIFI_Init();
     DRIVER_API_Init();
     MODULE_API_Init();
-    MODULE_WIFI_Init();
+    DRIVER_LCD_Init();
+    MODULE_LCD_Init();
+
+    // Add Notification Targets
+    MODULE_WIFI_AddNotificationTarget(&s_dataqueue);
+    MODULE_API_AddNotificationTarget(&s_dataqueue);
+
+    ESP_LOGI(DEBUG_TAG_MAIN, "Starting main task");
 
     // Start UI
-    MODULE_LCD_SetUIFunction(ui_init);
     MODULE_LCD_StartUI();
 
+    vTaskDelay(pdMS_TO_TICKS(250));
+    
+    // Set Location
+    MODULE_LCD_SetLocation(DRIVER_API_WEATHER_CITYNAME","DRIVER_API_WEATHER_COUNTRYCODE);
+
     // Connect To Wifi
-    util_dataqueue_item_t dq_i;
     dq_i.data_type = DATA_TYPE_COMMAND;
     dq_i.data = MODULE_WIFI_COMMAND_CONNECT;
     MODULE_WIFI_AddCommand(&dq_i);
-
-    ESP_LOGI(DEBUG_TAG_MAIN, "Waiting for wifi to connect...");
 
     // Start Scheduler
     // No Need. ESP-IDF Automatically Starts The Scheduler Before main Is Called
     
     while(true)
     {
+        if(UTIL_DATAQUEUE_MessageCheck(&s_dataqueue))
+        {
+            if(UTIL_DATAQUEUE_MessageGet(&s_dataqueue, &dq_i, 0))
+            {
+                ESP_LOGI(DEBUG_TAG_MAIN, "New In DataQueue. Type %u, Data %u", dq_i.data_type, dq_i.data);
+                
+                if(dq_i.data_type == DATA_TYPE_NOTIFICATION)
+                {
+                    switch(dq_i.data)
+                    {
+                        case DRIVER_WIFI_NOTIFICATION_GOT_IP:
+                            MODULE_LCD_SetIP(dq_i.data_buff.value.ip);
+                            break;
+                        
+                        case DRIVER_WIFI_NOTIFICATION_LOST_IP:
+                        case DRIVER_WIFI_NOTIFICATION_DISCONNECTED:
+                            MODULE_LCD_SetIP("");
+                            break;
+                        
+                        case MODULE_API_NOTIFICATION_TIME_UPDATE:
+                            MODULE_LCD_SetTime((driver_api_time_info_t *)&dq_i.data_buff.value.timedata);
+                            break;
+                        
+                        case MODULE_API_NOTIFICATION_WEATHER_UPDATE:
+                            MODULE_LCD_SetWeather((driver_api_weather_info_t *)&dq_i.data_buff.value.weatherdata);
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 

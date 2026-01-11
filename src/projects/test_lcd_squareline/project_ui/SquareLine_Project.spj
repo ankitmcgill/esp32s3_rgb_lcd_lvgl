@@ -2403,24 +2403,6 @@
                                   50
                                 ],
                                 "InheritedType": 7
-                              },
-                              {
-                                "nid": 10920,
-                                "strtype": "_style/Shadow_params",
-                                "intarray": [
-                                  50,
-                                  2
-                                ],
-                                "InheritedType": 7
-                              },
-                              {
-                                "nid": 10930,
-                                "strtype": "_style/Shadow_offset",
-                                "intarray": [
-                                  3,
-                                  3
-                                ],
-                                "InheritedType": 7
                               }
                             ],
                             "InheritedType": 1
@@ -2750,24 +2732,6 @@
                                   0,
                                   0,
                                   50
-                                ],
-                                "InheritedType": 7
-                              },
-                              {
-                                "nid": 10920,
-                                "strtype": "_style/Shadow_params",
-                                "intarray": [
-                                  50,
-                                  1
-                                ],
-                                "InheritedType": 7
-                              },
-                              {
-                                "nid": 10930,
-                                "strtype": "_style/Shadow_offset",
-                                "intarray": [
-                                  3,
-                                  3
                                 ],
                                 "InheritedType": 7
                               }
@@ -3429,7 +3393,7 @@
     "theme_color1": 5,
     "theme_color2": 0,
     "custom_variable_prefix": "uic",
-    "backup_cnt": 95,
+    "backup_cnt": 98,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "9.2.2",

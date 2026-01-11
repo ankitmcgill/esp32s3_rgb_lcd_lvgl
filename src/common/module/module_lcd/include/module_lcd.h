@@ -10,11 +10,16 @@
 #include <stdbool.h>
 
 #include "driver_lcd.h"
+#include "driver_api.h"
 
 bool MODULE_LCD_Init(void);
 
-void MODULE_LCD_SetUIFunction(void (*ptr)(void));
 bool MODULE_LCD_StartUI(void);
 bool MODULE_LCD_Demo(void);
+
+bool MODULE_LCD_SetIP(char* ip);
+bool MODULE_LCD_SetTime(driver_api_time_info_t* ti);
+bool MODULE_LCD_SetLocation(char* city_country);
+bool MODULE_LCD_SetWeather(driver_api_weather_info_t* wi);
 
 #endif

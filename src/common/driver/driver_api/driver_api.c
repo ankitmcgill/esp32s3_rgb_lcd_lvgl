@@ -51,7 +51,7 @@ bool DRIVER_API_GetWeather(driver_api_weather_info_t* w_info)
     // Get Weather Data
 
     esp_err_t err;
-
+    
     // Generate API Call Message
     // Allocate Buffers & Api Url
     s_response_len = 0;
@@ -235,7 +235,7 @@ static void s_ts_to_time_strings(uint32_t ts, driver_api_time_info_t* t_info)
     }else{
         sprintf(t_info->am_pm_string, "AM");
     }
-    sprintf(t_info->time_string, "%u:%u", timeinfo.tm_hour, timeinfo.tm_min);    
+    sprintf(t_info->time_string, "%u:%02u", timeinfo.tm_hour, timeinfo.tm_min);    
     sprintf(t_info->date_string, 
                 "%s %u %s, %u", 
                 wday[timeinfo.tm_wday],

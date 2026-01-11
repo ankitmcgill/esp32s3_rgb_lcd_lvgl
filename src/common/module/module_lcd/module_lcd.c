@@ -28,27 +28,18 @@ bool MODULE_LCD_Init(void)
     s_component_type = COMPONENT_TYPE_TASK;
 
     // Create Task
-    // Pinned to Core 0
-    xTaskCreatePinnedToCore(
+    xTaskCreate(
         s_task_function,
         "t-m-lcd",
         TASK_STACK_DEPTH_MODULE_LCD,
         NULL,
         TASK_PRIORITY_MODULE_LCD,
-        &s_task_handle,
-        0
+        &s_task_handle
     );
 
     ESP_LOGI(DEBUG_TAG_MODULE_LCD, "Type %u. Init", s_component_type);
 
     return true;
-}
-
-void MODULE_LCD_SetUIFunction(void (*ptr)(void))
-{
-    // Set UI Init Function
-
-    DRIVER_LCD_SetUIFunction(ptr);
 }
 
 bool MODULE_LCD_StartUI(void)
@@ -70,6 +61,54 @@ bool MODULE_LCD_Demo(void)
         .data_type = DATA_TYPE_COMMAND,
         .data = DRIVER_LCD_COMMAND_DEMO
     };
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
+bool MODULE_LCD_SetIP(char* ip)
+{
+    // Set IP Address Field
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_IP
+    };
+    strcpy(dq_i.data_buff.value.ip, ip);
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
+bool MODULE_LCD_SetTime(driver_api_time_info_t* ti)
+{
+    // Set Time Fields
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_TIME
+    };
+    memcpy(&dq_i.data_buff.value.timedata, ti, sizeof(driver_api_time_info_t));
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
+bool MODULE_LCD_SetLocation(char* city_country)
+{
+    // Set City & Country
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_LOCATION
+    };
+    strcpy(dq_i.data_buff.value.location, city_country);
+    return DRIVER_LCD_AddCommand(&dq_i);
+}
+
+bool MODULE_LCD_SetWeather(driver_api_weather_info_t* wi)
+{
+    // Set Weather
+
+    util_dataqueue_item_t dq_i = {
+        .data_type = DATA_TYPE_COMMAND,
+        .data = DRIVER_LCD_COMMAND_SET_WEATHER
+    };
+    memcpy(&dq_i.data_buff.value.weatherdata, wi, sizeof(driver_api_weather_info_t));
     return DRIVER_LCD_AddCommand(&dq_i);
 }
 

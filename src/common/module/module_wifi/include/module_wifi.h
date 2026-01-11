@@ -13,9 +13,9 @@
 #include "util_dataqueue.h"
 
 #define MODULE_WIFI_DATAQUEUE_MAX               (3)
-#define MODULE_WIFI_NOTIFICATION_TARGET_MAX     (1)
 #define MODULE_WIFI_WIFI_CONNECT_TIMEOUT_SEC    (15)
 #define MODULE_WIFI_WIFI_CONNECT_RETRY_MAX      (2)
+#define MODULE_WIFI_NOTIFICATION_TARGET_MAX     (DRIVER_WIFI_NOTIFICATION_TARGET_MAX)
 
 typedef enum {
     MODULE_WIFI_COMMAND_CONNECT = 0
@@ -38,8 +38,11 @@ typedef enum{
     MODULE_WIFI_STATE_DISCONNECTED
 }module_wifi_state_t;
 
+typedef driver_wifi_notification_type_t module_wifi_notification_type_t;
+
 bool MODULE_WIFI_Init(void);
 
 bool MODULE_WIFI_AddCommand(util_dataqueue_item_t* dq_i);
+bool MODULE_WIFI_AddNotificationTarget(util_dataqueue_t* dq);
 
 #endif

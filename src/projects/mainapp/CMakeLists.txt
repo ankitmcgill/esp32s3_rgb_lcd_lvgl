@@ -27,6 +27,10 @@ execute_process(
 )
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}" -DGIT_HASH="${GIT_HASH}" -DGIT_TAG="${GIT_TAG}")
 
+# Project Compile Options
+# Enable UI For this Project
+set(PROJECT_INCLUDE_UI ON CACHE BOOL "Include UI")
+
 set(EXTRA_COMPONENT_DIRS
     # Driver Code
     "../../common/driver/"
@@ -53,3 +57,4 @@ set(PROJECT_VER "0.1")
 # "Trim" the build. Include the minimal set of components, main, and anything it depends on.
 idf_build_set_property(MINIMAL_BUILD ON)
 project(Test_Lcd_Squareline)
+

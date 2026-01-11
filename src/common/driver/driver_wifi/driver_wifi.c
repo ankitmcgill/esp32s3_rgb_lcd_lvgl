@@ -99,15 +99,13 @@ bool DRIVER_WIFI_Init(void)
     ));
 
     // Create Driver Wifi Task
-    // Pinned to Core 0
-    xTaskCreatePinnedToCore(
+    xTaskCreate(
         s_task_function,
         "t-d-wifi",
         TASK_STACK_DEPTH_DRIVER_WIFI,
         NULL,
         TASK_PRIORITY_DRIVER_WIFI,
-        &handle_task_driver_wifi,
-        0
+        &handle_task_driver_wifi
     );
 
     ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "Type %u. Init. Hostname %s", s_component_type, hostname);
@@ -150,7 +148,13 @@ bool DRIVER_WIFI_AddCommand(util_dataqueue_item_t* dq_i)
 {
     // Add Command
 
-    return UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0);
+    if(!UTIL_DATAQUEUE_MessageQueue(&s_dataqueue, dq_i, 0)){
+        ESP_LOGW(DEBUG_TAG_DRIVER_WIFI, "Message Queue Failed %s", __FILE__);
+
+        return false;
+    }
+
+    return true;
 }
 
 bool DRIVER_WIFI_AddNotificationTarget(util_dataqueue_t* dq)
@@ -202,7 +206,9 @@ static bool s_notify(util_dataqueue_item_t* dq_i, TickType_t wait)
     // Send Notification
 
     for(uint8_t i = 0; i < s_notification_targets_count; i++){
-        UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait);
+        if(!UTIL_DATAQUEUE_MessageQueue(s_notification_targets[i], dq_i, wait)){
+            ESP_LOGW(DEBUG_TAG_DRIVER_WIFI, "Message Queue Failed %s", __FILE__);
+        }
     }
 
     return true;
@@ -339,6 +345,9 @@ static void s_event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t
                 ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
                 ESP_LOGI(DEBUG_TAG_DRIVER_WIFI, "IP : " IPSTR, IP2STR(&(event->ip_info.ip)));
 
+                // Send Notification
+                memset(&dq_i, sizeof(util_dataqueue_item_t), 0);
+                sprintf(dq_i.data_buff.value.ip, IPSTR, IP2STR(&(event->ip_info.ip)));
                 dq_i.data = DRIVER_WIFI_NOTIFICATION_GOT_IP;
                 s_notify(&dq_i, 0);
                 break;

@@ -16,19 +16,19 @@
 
 #define DRIVER_LCD_DISPLAY_HRES             (800)
 #define DRIVER_LCD_DISPLAY_VRES             (480)
-#define DRIVER_LCD_UI_HRES                  (DRIVER_LCD_DISPLAY_HRES)
-#define DRIVER_LCD_UI_VRES                  (DRIVER_LCD_DISPLAY_VRES)
 
-#define DRIVER_LCD_DATAQUEUE_MAX            (2)
+#define DRIVER_LCD_DATAQUEUE_MAX            (4)
 
 typedef enum {
     DRIVER_LCD_COMMAND_DEMO = 0,
-    DRIVER_LCD_COMMAND_LOAD_UI
+    DRIVER_LCD_COMMAND_LOAD_UI,
+    DRIVER_LCD_COMMAND_SET_IP,
+    DRIVER_LCD_COMMAND_SET_TIME,
+    DRIVER_LCD_COMMAND_SET_WEATHER,
+    DRIVER_LCD_COMMAND_SET_LOCATION,
 }driver_lcd_command_type_t;
 
 bool DRIVER_LCD_Init(void);
-
-void DRIVER_LCD_SetUIFunction(void (*ptr)(void));
 
 bool DRIVER_LCD_AddCommand(util_dataqueue_item_t* dq_i);
 
