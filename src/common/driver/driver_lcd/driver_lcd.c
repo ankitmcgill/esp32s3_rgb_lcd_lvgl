@@ -46,7 +46,11 @@ static SemaphoreHandle_t s_handle_semaphore_guiready;
 static esp_timer_handle_t s_timer;
 static esp_timer_handle_t s_timer_one_second;
 static lv_display_t* s_lvgl_display;
+
+
+// Hacky Code For Second Indicator
 static char s_second_panel_visible = true;
+static bool s_update_seconds = false;
 
 // Local Functions
 static bool s_lcd_rgb_panel_setup(void);
@@ -358,22 +362,24 @@ static void s_task_lvgl(void *arg)
                             #endif
                             break;
                         
-                        case DRIVER_LCD_COMMAND_SET_SECOND:
-                            #ifdef CONFIG_INCLUDE_UI
-                            if(s_second_panel_visible){
-                                lv_obj_add_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
-                            }else{
-                                lv_obj_clear_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
-                            }
-                            s_second_panel_visible = !s_second_panel_visible;
-                            #endif
-                            break;
-
                         default:
                             break;
                     }
                 }
             }
+        }
+
+        // Hacky Code For Second Toggling
+        if(s_update_seconds){
+            #ifdef CONFIG_INCLUDE_UI
+            if(s_second_panel_visible){
+                lv_obj_add_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
+            }else{
+                lv_obj_clear_flag(ui_panel3, LV_OBJ_FLAG_HIDDEN);
+            }
+            s_second_panel_visible = !s_second_panel_visible;
+            #endif
+            s_update_seconds = false;
         }
 
         lv_timer_handler();
@@ -384,12 +390,8 @@ static void s_task_lvgl(void *arg)
 static void s_timer_one_second_cb(void *arg)
 {
     // Send One Second Notification
-
-    util_dataqueue_item_t dq_i = {
-        .data_type = DATA_TYPE_COMMAND,
-        .data = DRIVER_LCD_COMMAND_SET_SECOND
-    };
-    DRIVER_LCD_AddCommand(&dq_i);
+    
+    s_update_seconds = true;
 }
 
 static void s_lvgl_tick_timer_cb(void* arg)

@@ -311,7 +311,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "----------",
+                        "strval": "",
                         "InheritedType": 10
                       },
                       {
@@ -334,10 +334,30 @@
                                 "InheritedType": 7
                               },
                               {
+                                "nid": 10420,
+                                "strtype": "_style/Text_Spacing",
+                                "intarray": [
+                                  1,
+                                  0
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
                                 "nid": 10450,
                                 "strtype": "_style/Text_Font",
                                 "strval": "montserrat_18",
                                 "InheritedType": 3
+                              },
+                              {
+                                "nid": 11110,
+                                "strtype": "_style/Padding",
+                                "intarray": [
+                                  5,
+                                  0,
+                                  0,
+                                  0
+                                ],
+                                "InheritedType": 7
                               }
                             ],
                             "InheritedType": 1
@@ -783,7 +803,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "9:39",
+                        "strval": "xx:xx",
                         "InheritedType": 10
                       },
                       {
@@ -970,7 +990,7 @@
                           {
                             "nid": 1030,
                             "strtype": "LABEL/Text",
-                            "strval": "AM",
+                            "strval": "XX",
                             "InheritedType": 10
                           },
                           {
@@ -1738,7 +1758,7 @@
                       {
                         "nid": 1030,
                         "strtype": "LABEL/Text",
-                        "strval": "-------",
+                        "strval": "",
                         "InheritedType": 10
                       },
                       {
@@ -3682,7 +3702,7 @@
     "theme_color1": 5,
     "theme_color2": 0,
     "custom_variable_prefix": "uic",
-    "backup_cnt": 123,
+    "backup_cnt": 126,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "9.2.2",

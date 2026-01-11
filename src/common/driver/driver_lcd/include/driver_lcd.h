@@ -25,7 +25,6 @@ typedef enum {
     DRIVER_LCD_COMMAND_SET_IP,
     DRIVER_LCD_COMMAND_SET_TIME,
     DRIVER_LCD_COMMAND_SET_LOCATION,
-    DRIVER_LCD_COMMAND_SET_SECOND
 }driver_lcd_command_type_t;
 
 bool DRIVER_LCD_Init(void);
